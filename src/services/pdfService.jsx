@@ -6279,13 +6279,13 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
     });
     yLPA -= 18;
     const confirmations = [
-      "The notes of the instructions and advice detailed on the preceding pages is accurate;",
-      "I / We understand that The Planning Bee Ltd will need to instruct a firm who are regulated to perform trust drafting and conveyancing in order to prepare the trust deed and they can instruct any regulate law firm to do so.",
-      "I / We have been provided with the client care document and receipt and I / We are aware of the cancellation terms.",
-      "I / We consent to all my / our relevant personal details contained within this document being processed by The Planning Bee Ltd and shared with the third-party regulated law firm for the purposes of preparing the trust deed and conveyancing work.",
-      "I / We confirm that we have read and understood the contents of this document and confirm that the instructions are accurate to the best of my / our knowledge.",
-      "I / We confirm that we have been given the opportunity to ask questions and that all questions have been answered to our satisfaction.",
-      "I / We confirm that we are signing this document voluntarily and without any undue influence."
+      "The information recorded in this form is my/our instruction(s) and I/we know of no reason why my/our document(s) should not be prepared in this way.",
+      "I understand that The Planning Bee Ltd may use this information in line with its normal marketing activities as governed by the GDPR.",
+      "I confirm and understand that The Planning Bee Ltd are not responsible for ensuring the original Wills and Lasting Powers of Attorney are signed by the client.",
+      "I agree for my draft documents to be sent by email.",
+      "The Client agrees that they can cancel at any time, if they cancel within 14 days they will receive a full refund. They can cancel by emailing support@theplanningbee.co.uk.",
+      "The Client agrees it is their responsibility to ensure that the spelling of all names, addresses and dates of births are correct on the draft documents.",
+      "The Client agrees to the Terms & Conditions and have been left with a copy of such."
     ];
     confirmations.forEach((confirmation, index) => {
       const confirmationText = `${index + 1}. ${confirmation}`;
