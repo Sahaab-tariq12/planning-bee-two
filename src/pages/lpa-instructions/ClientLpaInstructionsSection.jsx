@@ -195,8 +195,8 @@ const ClientLpaInstructionsSection = () => {
         </div>
 
         {/* General LPA Information Section */}
-        <div className="bg-white rounded-xl border border-gray-200 p-6 flex flex-col gap-6">
-          <h3 className="text-xl font-bold text-[#2D3748]">
+        <div className="bg-white rounded-xl border border-gray-200 p-4 md:p-6 flex flex-col gap-6">
+          <h3 className="text-md md:text-xl font-bold text-[#2D3748]">
             General LPA Information
           </h3>
 
@@ -248,7 +248,7 @@ const ClientLpaInstructionsSection = () => {
             <p className="text-[#2D3748] font-medium">
               When do you want attorneys to be able to make decisions?
             </p>
-            <div className="flex gap-6">
+            <div className="flex flex-col md:flex-row gap-6">
               <label className="flex items-center gap-2 cursor-pointer">
                 <input
                   type="radio"
@@ -314,7 +314,7 @@ const ClientLpaInstructionsSection = () => {
                 checked={awareOfFee}
                 onChange={handleAwareOfFeeChange}
               />
-              <span className="text-red-500 font-medium">
+              <span className="text-red-500 text-[12px] md:text-[16px] font-medium">
                 Is the client aware of the OPG registration fee?
               </span>
             </label>

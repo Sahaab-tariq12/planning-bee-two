@@ -1,6 +1,7 @@
-import React from "react";
-import { Routes, Route, useLocation } from "react-router-dom";
+import React, { useState } from "react";
+import { Routes, Route } from "react-router-dom";
 import { Toaster } from "react-hot-toast";
+import { AuthProvider, useAuth } from "./context/AuthContext";
 import { AppProvider } from "./context/AppContext";
 import LayoutWrapper from "./layout/LayoutWrapper";
 import MainHomePage from "./pages/home/MainHomePage";
@@ -12,16 +13,14 @@ import MainIdInformation from "./pages/id-information/MainIdInformation";
 import MainReview from "./pages/review-sign/MainReview";
 import ScrollToTop from "./components/ScrollToTop";
 
-const App = () => {
-  const location = useLocation();
-
+const AppContent = () => {
   return (
     <AppProvider>
       <Toaster position="top-right" />
       <ScrollToTop />
       <Routes>
+        {/* Protected Routes */}
         <Route path="/" element={<MainHomePage />} />
-
         <Route
           path="/client-details"
           element={
@@ -72,6 +71,14 @@ const App = () => {
         />
       </Routes>
     </AppProvider>
+  );
+};
+
+const App = () => {
+  return (
+    <AuthProvider>
+      <AppContent />
+    </AuthProvider>
   );
 };
 

@@ -1,8 +1,7 @@
 import React from "react";
-import { Button } from "./ui/button";
 import { Download } from "lucide-react";
-import { useAppContext } from "../../context/AppContext";
-import { generatePDF } from "../../services/pdfService.jsx";
+import { useAppContext } from "../context/AppContext";
+import { generatePDF } from "../services/pdfService.jsx";
 import { toast } from "react-hot-toast";
 
 const PdfExportButton = ({ className = "" }) => {
@@ -63,14 +62,14 @@ const PdfExportButton = ({ className = "" }) => {
   };
 
   return (
-    <Button
+    <button
       onClick={handleExport}
-      className={`flex items-center gap-2 ${className}`}
-      variant="outline"
+      className={`flex items-center justify-center gap-2 px-4 py-3 border border-gray-300 rounded-lg bg-white hover:bg-gray-50 transition-colors text-sm font-medium shadow-sm ${className}`}
+      style={{ minHeight: '48px' }} // iOS touch target minimum
     >
       <Download className="h-4 w-4" />
       <span>Export to PDF</span>
-    </Button>
+    </button>
   );
 };
 

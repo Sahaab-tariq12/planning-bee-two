@@ -472,7 +472,7 @@ const MainIdInformation = () => {
             <div className="bg-black rounded-lg overflow-hidden flex items-center justify-center">
               <video
                 ref={videoRef}
-                className="w-full max-h-[60vh] object-contain"
+                className="w-full max-h-[40vh] object-contain"
                 autoPlay
                 playsInline
               />

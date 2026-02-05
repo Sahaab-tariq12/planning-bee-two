@@ -647,7 +647,7 @@ const Bequests = () => {
             >
               <div className="flex justify-between items-start">
                 <div className="flex-1">
-                  <p className="font-medium text-[#2D3748]">
+                  <p className="hidden md:block font-medium text-[#2D3748]">
                     {bequest.giftType === "Money"
                       ? `£${bequest.amount}`
                       : bequest.giftDescription}

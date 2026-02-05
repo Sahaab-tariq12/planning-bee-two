@@ -305,7 +305,7 @@ const ClientAttorneysSection = ({
   return (
     <>
       {/* Attorneys Section */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col md:flex-row items-start md:items-center gap-2 md:gap-0 justify-between">
         <label className="text-[#2D3748] font-medium">
           Attorneys -{" "}
           {activeTab === "property"
@@ -315,7 +315,7 @@ const ClientAttorneysSection = ({
         <button
           type="button"
           onClick={handleAddAttorney}
-          className="flex items-center gap-2 px-4 py-2 bg-[#0080FF] text-white rounded-lg font-medium "
+          className="flex items-center text-[12px] md:text-[16px] px-4 py-2 bg-[#0080FF] text-white rounded-lg font-medium "
         >
           <FiPlus size={18} />
           <span>Add Attorney</span>
@@ -498,7 +498,7 @@ const ClientAttorneysSection = ({
       )}
 
       {/* Replacement Attorney Section */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col md:flex-row items-start md:items-center gap-2 md:gap-0 justify-between">
         <label className="text-[#2D3748]  font-medium">
           Add Replacement Attorney -{" "}
           {activeTab === "property"
@@ -508,7 +508,7 @@ const ClientAttorneysSection = ({
         <button
           type="button"
           onClick={handleAddReplacementAttorney}
-          className="flex items-center gap-2 px-4 py-2 bg-[#0080FF] text-white rounded-lg font-medium"
+          className="flex items-center gap-2 px-4 py-2 text-[12px] md:text-[16px] bg-[#0080FF] text-white rounded-lg font-medium"
         >
           <FiPlus size={18} />
           <span>Add Replacement Attorney</span>

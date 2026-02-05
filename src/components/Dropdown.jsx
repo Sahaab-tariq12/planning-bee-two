@@ -48,7 +48,7 @@ const Dropdown = ({
       {label && (
         <label 
           htmlFor={dropdownId} 
-          className="block text-sm font-medium mb-1 text-gray-700"
+          className="block text-[12px] md:text-sm font-medium mb-1 text-gray-700"
         >
           {label}
           {required && <span className="text-red-500 ml-1">*</span>}

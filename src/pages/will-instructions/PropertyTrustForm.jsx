@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useRef } from "react";
 import { FiTrash2, FiChevronDown, FiChevronUp } from "react-icons/fi";
 import Input from "../../components/Input";
+import Dropdown from "../../components/Dropdown";
+import { useAppContext } from "../../context/AppContext";
 
 const PropertyTrustForm = ({
   trust,
@@ -11,6 +13,7 @@ const PropertyTrustForm = ({
   client1Address,
   client2Address,
 }) => {
+  const { clientDetails = {}, willInstructions = {} } = useAppContext();
   const [showAddressDropdown, setShowAddressDropdown] = useState(false);
   const [addresses, setAddresses] = useState([]);
   const dropdownRef = useRef(null);
@@ -53,6 +56,76 @@ const PropertyTrustForm = ({
 
   const handleCheckboxToggle = (field, subField) => {
     onCheckboxChange(index, field, subField);
+  };
+
+  // Generate people options from client details (similar to ExecutorForm)
+  const getPeopleOptions = () => {
+    const options = [];
+
+    // Add Client 1 if available
+    if (clientDetails.firstName && clientDetails.lastName) {
+      const client1FullName =
+        `${clientDetails.firstName} ${clientDetails.lastName}`.trim();
+      options.push({
+        value: "client1",
+        label: client1FullName,
+        fullName: client1FullName,
+        firstName: clientDetails.firstName,
+        lastName: clientDetails.lastName,
+        address: clientDetails.address || "",
+      });
+    }
+
+    // Add Client 2 if available
+    if (clientDetails.firstName2 && clientDetails.lastName2) {
+      const client2FullName =
+        `${clientDetails.firstName2} ${clientDetails.lastName2}`.trim();
+      options.push({
+        value: "client2",
+        label: client2FullName,
+        fullName: client2FullName,
+        firstName: clientDetails.firstName2,
+        lastName: clientDetails.lastName2,
+        address: clientDetails.address2 || clientDetails.address || "",
+      });
+    }
+
+    // Add Children if available
+    if (willInstructions.children && willInstructions.children.length > 0) {
+      willInstructions.children.forEach((child, index) => {
+        if (child.fullName) {
+          const childFullName = child.fullName.trim();
+
+          options.push({
+            value: `child-${child.id}`,
+            label: childFullName,
+            fullName: childFullName,
+            firstName: child.fullName.split(" ")[0] || "",
+            lastName: child.fullName.split(" ").slice(1).join(" ") || "",
+            type: "child",
+            address: child.address || "",
+          });
+        }
+      });
+    }
+
+    return options;
+  };
+
+  const peopleOptions = getPeopleOptions();
+
+  const handlePersonSelect = (selectedValue) => {
+    const selectedPerson = peopleOptions.find(
+      (option) => option.value === selectedValue,
+    );
+    if (selectedPerson) {
+      handleChange("occupantLifeTenant", {
+        ...trust.occupantLifeTenant,
+        otherName: selectedPerson.fullName,
+        otherDetails: selectedPerson.address || "",
+        selectedPerson: selectedValue,
+      });
+    }
   };
 
   return (
@@ -324,36 +397,68 @@ const PropertyTrustForm = ({
 
         {/* Other Occupant Details */}
         {trust.occupantLifeTenant?.other && (
-          <div className="space-y-2">
-            <Input
-              type="text"
-              value={trust.occupantLifeTenant.otherName || ""}
-              onChange={(e) =>
-                handleChange("occupantLifeTenant", {
-                  ...trust.occupantLifeTenant,
-                  otherName: e.target.value,
-                })
-              }
-              placeholder="Enter occupant/tenant name"
-              className="w-full md:w-1/2"
-            />
-            <Input
-              type="textarea"
-              rows={3}
-              value={trust.occupantLifeTenant.otherDetails || ""}
-              onChange={(e) =>
-                handleChange("occupantLifeTenant", {
-                  ...trust.occupantLifeTenant,
-                  otherDetails: e.target.value,
-                })
-              }
-              placeholder="Additional details (address, relationship, etc.)"
-              maxLength={300}
-            />
-            <div className="flex justify-end items-center mt-1">
-              <span className="text-xs text-gray-500">
-                {(trust.occupantLifeTenant.otherDetails || "").length}/300 characters
-              </span>
+          <div className="space-y-3">
+            {/* Manual input fields first */}
+            <div className="space-y-2">
+              <Input
+                type="text"
+                value={trust.occupantLifeTenant.otherName || ""}
+                onChange={(e) =>
+                  handleChange("occupantLifeTenant", {
+                    ...trust.occupantLifeTenant,
+                    otherName: e.target.value,
+                    selectedPerson: "", // Clear selected person when manually typing
+                  })
+                }
+                placeholder="Enter occupant/tenant name"
+                className="w-full md:w-1/2"
+              />
+              <Input
+                type="textarea"
+                rows={3}
+                value={trust.occupantLifeTenant.otherDetails || ""}
+                onChange={(e) =>
+                  handleChange("occupantLifeTenant", {
+                    ...trust.occupantLifeTenant,
+                    otherDetails: e.target.value,
+                  })
+                }
+                placeholder="Additional details (address, relationship, etc.)"
+                maxLength={300}
+              />
+              <div className="flex justify-end items-center mt-1">
+                <span className="text-xs text-gray-500">
+                  {(trust.occupantLifeTenant.otherDetails || "").length}/300 characters
+                </span>
+              </div>
+            </div>
+
+            {/* Select from people dropdown after input */}
+            <div className="space-y-2">
+              <label className="block font-semibold text-[14px] md:text-[16px] text-[#2D3748]">
+                Or select from people in application
+              </label>
+              <Dropdown
+                options={
+                  peopleOptions.length > 0
+                    ? peopleOptions
+                    : [
+                      {
+                        value: "no-people",
+                        label: "No people found in application yet",
+                        disabled: true,
+                      },
+                    ]
+                }
+                value={trust.occupantLifeTenant.selectedPerson || ""}
+                onChange={handlePersonSelect}
+                placeholder={
+                  peopleOptions.length > 0
+                    ? "Select from people mentioned in application..."
+                    : "No people found in application yet"
+                }
+                disabled={peopleOptions.length === 0}
+              />
             </div>
           </div>
         )}
@@ -404,7 +509,13 @@ const PropertyTrustForm = ({
                 value={trust.fixedTerm}
                 onChange={(e) => handleChange("fixedTerm", e.target.value)}
                 placeholder="Specify fixed term"
+                maxLength={100}
               />
+              <div className="flex justify-end items-center mt-1">
+                <span className="text-xs text-gray-500">
+                  {(trust.fixedTerm || "").length}/100
+                </span>
+              </div>
             </div>
           )}
         </div>

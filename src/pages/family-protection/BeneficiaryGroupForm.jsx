@@ -260,7 +260,7 @@ const BeneficiaryGroupForm = ({
 
                 {/* Select from people dropdown */}
                 <div className="space-y-2">
-                  <label className="block font-semibold text-[14px] md:text-[16px] text-[#2D3748]">
+                  <label className="block font-bold md:font-semibold text-[10px] md:text-[16px] text-[#2D3748]">
                     Or select from people in application
                   </label>
                   <Dropdown

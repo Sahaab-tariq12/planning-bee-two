@@ -1,11 +1,11 @@
 import React, { useState, useRef } from 'react';
 import { X, Mail, Download, FileText } from 'lucide-react';
 import { useAppContext } from '../context/AppContext';
-import { generatePDF } from '../services/pdfService.jsx';
+import { generatePDF, generateTermsAndConditionsPDF } from '../services/pdfService.jsx';
 import { toast } from 'react-hot-toast';
 import axios from 'axios';
 
-const EmailReceiptModal = ({ isOpen, onClose }) => {
+const EmailReceiptModal = ({ isOpen, onClose, pdfType = 'full' }) => {
   const [email, setEmail] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
   const [pdfBlob, setPdfBlob] = useState(null);
@@ -31,7 +31,7 @@ const EmailReceiptModal = ({ isOpen, onClose }) => {
   const generatePdfForModal = async () => {
     try {
       setIsGenerating(true);
-      console.log("=== GENERATING PDF FOR EMAIL MODAL ===");
+      console.log("=== GENERATING PDF FOR EMAIL MODAL ===", `Type: ${pdfType}`);
       
       if (!clientDetails) {
         toast.error("Client details not loaded!");
@@ -58,8 +58,15 @@ const EmailReceiptModal = ({ isOpen, onClose }) => {
         reviewSignData: reviewSignData || {}
       }));
 
-      // Generate PDF and get blob using the same service as download
-      const pdfBlobResult = await generatePDF(formData, true); // Pass true to get blob
+      // Generate PDF based on type
+      let pdfBlobResult;
+      if (pdfType === 'terms') {
+        pdfBlobResult = await generateTermsAndConditionsPDF(formData, true);
+        console.log("=== TERMS & CONDITIONS PDF GENERATED ===");
+      } else {
+        pdfBlobResult = await generatePDF(formData, true);
+        console.log("=== FULL APPLICATION PDF GENERATED ===");
+      }
       
       // Check if result is actually a Blob
       if (pdfBlobResult instanceof Blob) {
@@ -71,7 +78,8 @@ const EmailReceiptModal = ({ isOpen, onClose }) => {
         }
         pdfUrlRef.current = URL.createObjectURL(pdfBlobResult);
         
-        toast.success("PDF ready for email attachment!");
+        const pdfTypeName = pdfType === 'terms' ? 'Terms & Conditions' : 'Application';
+        toast.success(`${pdfTypeName} PDF ready for email attachment!`);
       } else {
         console.error("PDF generation did not return a Blob:", pdfBlobResult);
         toast.error("PDF generation failed - invalid format");
@@ -119,13 +127,20 @@ const EmailReceiptModal = ({ isOpen, onClose }) => {
         reader.readAsDataURL(pdfBlob);
       });
 
+      const pdfTypeName = pdfType === 'terms' ? 'Terms & Conditions' : 'Application Receipt';
+      const fileName = pdfType === 'terms' 
+        ? `TermsAndConditions-${clientDetails?.clientReference || 'Terms'}.pdf`
+        : `ApplicationReceipt-${clientDetails?.clientReference || 'Receipt'}.pdf`;
+
       const payload = {
         to: email,
-        subject: "The Planning Bee - Application Receipt",
-        message: "Please find your application receipt attached for your records. This document confirms successful submission of your application.",
+        subject: `The Planning Bee - ${pdfTypeName}`,
+        message: pdfType === 'terms' 
+          ? "Please find your Terms & Conditions document attached for your records. This document contains the agreed terms and client signatures."
+          : "Please find your application receipt attached for your records. This document confirms successful submission of your application.",
         attachments: [
           {
-            filename: `ApplicationReceipt-${clientDetails?.clientReference || 'Receipt'}.pdf`,
+            filename: fileName,
             content: pdfBase64
           }
         ]
@@ -175,9 +190,12 @@ const EmailReceiptModal = ({ isOpen, onClose }) => {
 
   const handleDownloadPdf = () => {
     if (pdfUrlRef.current) {
+      const fileName = pdfType === 'terms' 
+        ? `terms-and-conditions-${clientDetails?.clientReference || 'terms'}.pdf`
+        : `planning-bee-receipt-${clientDetails?.clientReference || 'receipt'}.pdf`;
       const link = document.createElement('a');
       link.href = pdfUrlRef.current;
-      link.download = `planning-bee-receipt-${clientDetails?.clientReference || 'receipt'}.pdf`;
+      link.download = fileName;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
@@ -198,6 +216,9 @@ const EmailReceiptModal = ({ isOpen, onClose }) => {
 
   if (!isOpen) return null;
 
+  const modalTitle = pdfType === 'terms' ? 'Email Terms & Conditions' : 'Email Receipt';
+  const modalDescription = pdfType === 'terms' ? 'Send terms & conditions to your email' : 'Send receipt to your email';
+
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
       <div className="bg-white rounded-xl shadow-2xl w-full max-w-md mx-auto">
@@ -208,8 +229,8 @@ const EmailReceiptModal = ({ isOpen, onClose }) => {
               <Mail className="w-3 h-3 md:w-5 md:h-5 text-blue-600" />
             </div>
             <div>
-              <h3 className="text-[16px] md:text-lg font-semibold text-gray-900">Email Receipt</h3>
-              <p className="text-sm md:text-sm text-gray-500">Send receipt to your email</p>
+              <h3 className="text-[16px] md:text-lg font-semibold text-gray-900">{modalTitle}</h3>
+              <p className="text-sm md:text-sm text-gray-500">{modalDescription}</p>
             </div>
           </div>
           <button
@@ -263,7 +284,9 @@ const EmailReceiptModal = ({ isOpen, onClose }) => {
             {pdfBlob && (
               <div className="space-y-2">
                 <div className="text-xs text-gray-600">
-                  File: planning-bee-receipt-{clientDetails?.clientReference || 'receipt'}.pdf
+                  File: {pdfType === 'terms' 
+                    ? `terms-and-conditions-${clientDetails?.clientReference || 'terms'}.pdf`
+                    : `planning-bee-receipt-${clientDetails?.clientReference || 'receipt'}.pdf`}
                 </div>
                 <button
                   type="button"

@@ -1,6 +1,5 @@
 import { PDFDocument, rgb, StandardFonts } from "pdf-lib";
 import { saveAs } from "file-saver";
-
 // Helper function to safely get nested properties with error handling
 const getNestedValue = (obj, path, defaultValue = "") => {
   if (!obj) return defaultValue;
@@ -15,23 +14,19 @@ const getNestedValue = (obj, path, defaultValue = "") => {
     return defaultValue;
   }
 };
-
 // Format value for display
 const formatValue = (value, options = {}) => {
   // Handle undefined, null, or empty string
   if (value === undefined || value === null || value === "") {
     return "Not provided";
   }
-
   // Handle boolean values
   if (typeof value === "boolean") {
     return value ? "Yes" : "No";
   }
-
   // Handle arrays
   if (Array.isArray(value)) {
     if (value.length === 0) return "None";
-
     // Special handling for children array
     if (
       options.path === "willInstructions.children" ||
@@ -48,14 +43,11 @@ const formatValue = (value, options = {}) => {
             `Title: ${child.title || "Not provided"}`,
             `Date of Birth: ${child.dob || "Not provided"}`,
             `Address: ${child.address || "Not provided"}`,
-            `Relationship to Client 1: ${
-              child.relationshipClient1 || "Not specified"
+            `Relationship to Client 1: ${child.relationshipClient1 || "Not specified"
             }`,
-            `Relationship to Client 2: ${
-              child.relationshipClient2 || "Not specified"
+            `Relationship to Client 2: ${child.relationshipClient2 || "Not specified"
             }`,
           ];
-
           // Only add separator between children, not after the last one
           if (index < value.length - 1) {
             details.push(""); // Single empty line between children
@@ -63,13 +55,11 @@ const formatValue = (value, options = {}) => {
             // For the last child, remove any trailing whitespace that might add extra space
             return details.join("\n").trim();
           }
-
           return details.join("\n");
         })
         .filter(Boolean) // Remove any empty strings that might cause extra newlines
         .join("\n");
     }
-
     // Handle simple arrays
     return value
       .map((item) =>
@@ -77,7 +67,6 @@ const formatValue = (value, options = {}) => {
       )
       .join(", ");
   }
-
   // Handle objects
   if (typeof value === "object" && value !== null) {
     if (Array.isArray(value)) {
@@ -95,11 +84,9 @@ const formatValue = (value, options = {}) => {
       })
       .join("\n");
   }
-
   // Handle other types (string, number, etc.)
   return String(value).trim();
 };
-
 // Helper function to safely get values with fallbacks
 const getSafeValue = (obj, path, defaultValue = "Not provided") => {
   if (!obj) return defaultValue;
@@ -108,7 +95,6 @@ const getSafeValue = (obj, path, defaultValue = "Not provided") => {
     ? value
     : defaultValue;
 };
-
 // Function to deep merge objects
 const deepMerge = (target, source) => {
   const output = { ...target };
@@ -127,11 +113,9 @@ const deepMerge = (target, source) => {
   }
   return output;
 };
-
 const isObject = (item) => {
   return item && typeof item === "object" && !Array.isArray(item);
 };
-
 // Helper function to check if a value is empty
 const isEmpty = (value) => {
   if (value === null || value === undefined) return true;
@@ -140,13 +124,11 @@ const isEmpty = (value) => {
   if (typeof value === "object") return Object.keys(value).length === 0;
   return false;
 };
-
 // Helper function to clean and validate form data
 const cleanFormData = (formData) => {
   if (!formData || typeof formData !== "object") {
     throw new Error("Invalid form data provided");
   }
-
   // Ensure all nested objects exist to prevent null reference errors
   return {
     clientDetails: formData.clientDetails || {},
@@ -158,15 +140,12 @@ const cleanFormData = (formData) => {
     reviewSignData: formData.reviewSignData || {},
   };
 };
-
 export const generatePDF = async (formData = {}, returnBlob = false) => {
   console.log("=== PDF GENERATION STARTED ===");
-
   // Validate input
   if (!formData || typeof formData !== "object") {
     throw new Error("Invalid form data provided");
   }
-
   // Ensure all nested objects exist to prevent null reference errors
   const safeFormData = {
     clientDetails: formData.clientDetails || {},
@@ -177,13 +156,11 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
     signatures: formData.signatures || {},
     reviewSignData: formData.reviewSignData || {},
   };
-
   console.log("=== SAFE FORM DATA CREATED ===");
   console.log("Client Details exists:", !!safeFormData.clientDetails);
   console.log("Will Instructions exists:", !!safeFormData.willInstructions);
   console.log("ReviewSignData exists:", !!safeFormData.reviewSignData);
   console.log("ReviewSignData content:", safeFormData.reviewSignData);
-
   // Process client details with safe access
   const clientDetails = {
     // Core client 1 info
@@ -251,7 +228,6 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
       ),
     },
   };
-
   // Process other sections with proper fallbacks
   const processedData = {
     clientDetails,
@@ -262,7 +238,6 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
     signatures: safeFormData.signatures,
     reviewSignData: safeFormData.reviewSignData,
   };
-
   // Debug: Log signatures specifically
   console.log("=== SIGNATURES IN PDF GENERATION ===");
   console.log("Signatures object:", safeFormData.signatures);
@@ -291,16 +266,13 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
       safeFormData.signatures.client2.substring(0, 50) + "...",
     );
   }
-
   // Debug: Log the children data
   console.log(
     "Will Instructions Children Data:",
     safeFormData.willInstructions?.children,
   );
-
   console.log("=== PROCESSED DATA ===");
   console.log(JSON.stringify(processedData, null, 2));
-
   // Log each section
   const logSection = (name, data) => {
     console.log(`\n=== ${name.toUpperCase()} ===`);
@@ -312,26 +284,21 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
       });
     }
   };
-
   logSection("Client Details", processedData.clientDetails);
   logSection("Will Instructions", processedData.willInstructions);
   logSection("Family Protection", processedData.familyProtection);
   logSection("LPA Instructions", processedData.lpaInstructions);
   logSection("ID Information", processedData.idInformation);
   logSection("Signatures", processedData.signatures);
-
   try {
     if (!formData || typeof formData !== "object") {
       throw new Error("Invalid form data provided");
     }
-
     // Create a new PDF document
     const pdfDoc = await PDFDocument.create();
-
     // Add fonts
     const font = await pdfDoc.embedFont(StandardFonts.TimesRoman);
     const boldFont = await pdfDoc.embedFont(StandardFonts.TimesRomanBold);
-
     // Helper function to draw rounded rectangle
     const drawRoundedRect = (page, x, y, width, height, radius, color, borderColor) => {
       // Draw main rectangle without corners
@@ -342,7 +309,6 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
         height: height,
         color: color,
       });
-      
       // Draw left and right sides
       page.drawRectangle({
         x: x,
@@ -351,7 +317,6 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
         height: height - (radius * 2),
         color: color,
       });
-      
       page.drawRectangle({
         x: x + width - radius,
         y: y + radius,
@@ -359,7 +324,6 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
         height: height - (radius * 2),
         color: color,
       });
-      
       // Draw corner circles
       page.drawEllipse({
         x: x + radius,
@@ -368,7 +332,6 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
         yScale: radius,
         color: color,
       });
-      
       page.drawEllipse({
         x: x + width - radius,
         y: y + radius,
@@ -376,7 +339,6 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
         yScale: radius,
         color: color,
       });
-      
       page.drawEllipse({
         x: x + radius,
         y: y + height - radius,
@@ -384,7 +346,6 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
         yScale: radius,
         color: color,
       });
-      
       page.drawEllipse({
         x: x + width - radius,
         y: y + height - radius,
@@ -393,18 +354,15 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
         color: color,
       });
     };
-
     // Helper function to wrap text manually
     const wrapText = (text, font, maxWidth, lineHeight) => {
       const words = text.split(" ");
       const lines = [];
       let currentLine = "";
-
       for (const word of words) {
         // Test if adding this word would exceed maxWidth
         const testLine = currentLine + (currentLine ? " " : "") + word;
         const textWidth = font.widthOfTextAtSize(testLine, 10);
-
         if (textWidth > maxWidth) {
           if (currentLine) {
             lines.push(currentLine);
@@ -416,32 +374,26 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
           currentLine = testLine;
         }
       }
-
       if (currentLine) {
         lines.push(currentLine);
       }
-
       return lines;
     };
-
     // A4 page size
     const { width, height } = { width: 595.28, height: 841.89 };
     const leftMargin = 50;
     const rightMargin = 50;
-
     /**
      * Helper: draw a horizontal line that visually represents
      * an input underline on the original paper form.
      */
     const drawUnderline = (page, startX, endX, y, options = {}) => {
       const { thickness = 0.7, color = rgb(0.6, 0.6, 0.6) } = options;
-      
       // Validate coordinates to prevent NaN
       if (isNaN(startX) || isNaN(endX) || isNaN(y)) {
         console.warn('Invalid coordinates in drawUnderline:', { startX, endX, y });
         return;
       }
-      
       page.drawLine({
         start: { x: startX, y },
         end: { x: endX, y },
@@ -449,7 +401,6 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
         color,
       });
     };
-
     /**
      * Helper: draw a label with an underline next to it.
      * This matches the “Label ____________” style on the template.
@@ -477,9 +428,7 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
         console.warn('Invalid coordinates in drawLabeledLine:', { x, y });
         return;
       }
-      
       const safeValue = formatValue(value || "");
-
       // Calculate dynamic line width if enabled
       let calculatedLineWidth = lineWidth;
       if (dynamicWidth && safeValue && safeValue !== "Not provided") {
@@ -490,7 +439,6 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
           Math.min(maxWidth, textWidth + 5),
         ); // Reduced padding from 10px to 5px
       }
-
       // Label
       page.drawText(label, {
         x,
@@ -499,11 +447,9 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
         font: boldFont,
         color: rgb(0, 0, 0),
       });
-
       const lineStartX = x + labelWidth + gap;
       const lineEndX =
         x + labelWidth + gap + (calculatedLineWidth || lineWidth);
-
       // Pre‑filled value (if any)
       if (safeValue && safeValue !== "Not provided") {
         if (shouldWrapText && safeValue.length > 0) {
@@ -534,7 +480,6 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
           });
         }
       }
-
       // Underline (draw multiple underlines for wrapped text)
       if (shouldWrapText && safeValue && safeValue !== "Not provided") {
         const lines = wrapText(
@@ -550,12 +495,10 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
         drawUnderline(page, lineStartX, lineEndX, y - 2);
       }
     };
-
     // Helper function to draw consistent section headers
     const drawSectionHeader = (page, title, yPos) => {
       const bandHeight = 26;
       const y = yPos - bandHeight;
-
       // Draw the dark background band
       page.drawRectangle({
         x: 0,
@@ -564,7 +507,6 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
         height: bandHeight,
         color: rgb(0.1, 0.1, 0.11),
       });
-
       // Draw the title text
       page.drawText(title.toUpperCase(), {
         x: 50,
@@ -573,10 +515,8 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
         font: boldFont,
         color: rgb(1, 1, 1), // White text
       });
-
       return y - 35; // Return y position for content below the header with more space
     };
-
     /**
      * Helper: draw a yes/no checkbox row.
      */
@@ -595,13 +535,11 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
         typeof value === "boolean"
           ? value
           : String(value || "")
-              .toLowerCase()
-              .startsWith("y");
-
+            .toLowerCase()
+            .startsWith("y");
       const boxSize = 8;
       const checkboxTextGap = 1; // Space between checkbox and its label
       const optionGap = 15; // Space between Yes and No options
-
       // Draw the question label
       page.drawText(label, {
         x: x + 3,
@@ -610,10 +548,8 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
         font: boldFont,
         color: rgb(0, 0, 0),
       });
-
       // Calculate starting position for the checkboxes (with more space from label)
       let currentX = x + font.widthOfTextAtSize(label, fontSize) + 45; // Increased space after question
-
       const drawBox = (checked, text) => {
         // Draw checkbox
         page.drawRectangle({
@@ -624,7 +560,6 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
           borderWidth: 0.8,
           borderColor: rgb(0, 0, 0),
         });
-
         // Draw checkmark if checked
         if (checked) {
           page.drawRectangle({
@@ -635,10 +570,8 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
             color: rgb(0, 0, 0),
           });
         }
-
         // Position text next to checkbox
         currentX += boxSize + 8; // Increased space between checkbox and text
-
         // Draw the text (Yes/No)
         page.drawText(text, {
           x: currentX,
@@ -647,28 +580,22 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
           font,
           color: rgb(0, 0, 0),
         });
-
         // Move to next checkbox position (with more space between options)
         currentX += font.widthOfTextAtSize(text, fontSize) + 15; // Reduced from 30 to 20
       };
-
       // Draw Yes and No boxes
       drawBox(normalized, "Yes");
       drawBox(!normalized, "No");
-
       return y - 25;
     };
-
     /**
      * PAGE 1 – CLIENT INFORMATION
      * Following the required flow structure
      */
     let page = pdfDoc.addPage([width, height]);
-
     const titleText = "The-Planning Bee";
     const titleSize = 18; // Increased from 14 to 18
     const titleWidth = boldFont.widthOfTextAtSize(titleText, titleSize);
-
     page.drawText(titleText, {
       x: (width - titleWidth) / 2,
       y: height - 56,
@@ -676,9 +603,7 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
       font: boldFont,
       color: rgb(0, 0, 1), // Blue color (RGB: 0, 0, 1)
     });
-
     let y = height - 110; // Increased from 70 to 90 for more space below title
-
     // Client reference / Adviser / Date / Case notes
     drawLabeledLine(page, {
       label: "Client Reference",
@@ -691,9 +616,7 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
       minWidth: 120, // Increased from 80 to 100
       maxWidth: 380, // Increased from 200 to 350
     });
-
     y -= 22;
-
     drawLabeledLine(page, {
       label: "Advisers Name",
       value: processedData.clientDetails.adviserName,
@@ -705,10 +628,8 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
       minWidth: 170, // Increased from 100 to 150
       maxWidth: 420, // Increased from 250 to 400
     });
-
     y -= 22;
     y -= 8;
-
     // Case notes multi‑line area
     page.drawText("Case Notes", {
       x: 50,
@@ -717,7 +638,6 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
       font: boldFont,
       color: rgb(0, 0, 0),
     });
-
     // Get case notes with proper fallback
     const caseNotes = getNestedValue(
       processedData,
@@ -728,16 +648,13 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
     const notesLeftMargin = 52;
     const notesRightMargin = 40;
     const notesWidth = width - notesLeftMargin - notesRightMargin;
-
     // Calculate how many lines the text will take
     let lines = [];
     if (caseNotes && caseNotes.trim() !== "") {
       lines = wrapText(caseNotes, font, notesWidth, 12);
     }
-    
     // Only draw lines for actual content
     const lineCount = lines.length;
-    
     // Draw lines for case notes (only if there's content)
     if (lineCount > 0) {
       for (let i = 0; i < lineCount; i++) {
@@ -749,7 +666,6 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
           color: rgb(0, 0, 0),
         });
       }
-
       // Draw each line of text ON the lines (adjusted Y position)
       lines.forEach((line, index) => {
         const textY = notesTopY - 10 - (index * 15) + 3; // Position text on the line
@@ -762,15 +678,12 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
         });
       });
     }
-
     // Position the client information section with proper spacing from case notes
     const actualNotesHeight = lineCount > 0 ? lineCount * 15 + 20 : 0; // Calculate actual height based on lines, 0 if no content
     y = notesTopY - actualNotesHeight - 35;
-
     // Black band "CLIENT INFORMATION"
     const bandHeight = 26;
     const bandY = y - bandHeight; // Position band above the current y position
-
     page.drawRectangle({
       x: 0,
       y: bandY,
@@ -778,11 +691,9 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
       height: bandHeight,
       color: rgb(0.1, 0.1, 0.11),
     });
-
     // Draw "CLIENT INFORMATION" text in white for better visibility
     const clientInfoTitle = "CLIENT INFORMATION";
     const clientInfoWidth = boldFont.widthOfTextAtSize(clientInfoTitle, 12);
-
     page.drawText(clientInfoTitle, {
       x: 50,
       y: bandY + 6, // Vertically center in the band
@@ -790,12 +701,10 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
       font: boldFont,
       color: rgb(1, 1, 1), // White color for better contrast
     });
-
     // Helper function to draw section headers
     // const drawSectionHeader = (page, title, yPos) => {
     //   const bandHeight = 22;
     //   const y = yPos - bandHeight;
-
     //   // Draw the dark background band
     //   page.drawRectangle({
     //     x: 0,
@@ -804,7 +713,6 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
     //     height: bandHeight,
     //     color: rgb(0.1, 0.1, 0.11),
     //   });
-
     //   // Draw the title text
     //   page.drawText(title.toUpperCase(), {
     //     x: 50,
@@ -813,21 +721,16 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
     //     font: boldFont,
     //     color: rgb(1, 1, 1),  // White text
     //   });
-
     //   return y - 15;  // Return y position for content below the header
     // };
-
     // Set y position for the content below the client information header
     y = bandY - 30; // Space after the black band
-
     /**
      * CLIENT 1 & CLIENT 2 section on same page
      */
     const columnMid = width / 2;
-
     const drawClientBlock = ({ title, prefix, baseY, sectionData }) => {
       let localY = baseY;
-
       page.drawText(title, {
         x: prefix === "client1" ? 50 : columnMid + 10,
         y: localY,
@@ -835,11 +738,8 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
         font: boldFont,
         color: rgb(0, 0, 0),
       });
-
       localY -= 18;
-
       const xBase = prefix === "client1" ? 50 : columnMid + 10;
-
       drawLabeledLine(page, {
         label: "Full Name",
         value: sectionData.firstName,
@@ -850,10 +750,8 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
         minWidth: 80,
         maxWidth: 180,
       });
-
       localY -= 18;
       localY -= 18;
-
       drawLabeledLine(page, {
         label: "Address",
         value: sectionData.address,
@@ -864,9 +762,7 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
         shouldWrapText: true,
         lineHeight: 12,
       });
-
       localY -= 18;
-
       drawLabeledLine(page, {
         label: "Marital Status",
         value: sectionData.maritalStatus,
@@ -878,9 +774,7 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
         minWidth: 80,
         maxWidth: 150,
       });
-
       localY -= 18;
-
       drawLabeledLine(page, {
         label: "Mobile",
         value: sectionData.phone || sectionData.mobile,
@@ -892,10 +786,8 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
         minWidth: 80,
         maxWidth: 140,
       });
-
       return localY;
     };
-
     const client1 = {
       firstName: getSafeValue(safeFormData, "clientDetails.firstName", ""),
       lastName: getSafeValue(safeFormData, "clientDetails.lastName", ""),
@@ -912,7 +804,6 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
       dob: getSafeValue(safeFormData, "clientDetails.dob", ""),
       title: getSafeValue(safeFormData, "clientDetails.title", ""),
     };
-
     const client2 = {
       firstName: getSafeValue(safeFormData, "clientDetails.firstName2", ""),
       lastName: getSafeValue(safeFormData, "clientDetails.lastName2", ""),
@@ -931,13 +822,11 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
       dob: getSafeValue(safeFormData, "clientDetails.dob2", ""),
       title: getSafeValue(safeFormData, "clientDetails.title2", ""),
     };
-
     // Function to draw client information vertically with custom layout
     const drawClientInfoVertically = (client1, client2, startY) => {
       const leftX = 50;
       const rightX = 350; // Reduced spacing between left and right columns
       let currentY = startY;
-
       // Draw Client 1 section
       page.drawText("CLIENT 1", {
         x: leftX,
@@ -946,7 +835,6 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
         font: boldFont,
         color: rgb(0, 0, 0),
       });
-
       // Draw Client 1 title on right side
       drawLabeledLine(page, {
         label: "Title",
@@ -959,9 +847,7 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
         minWidth: 60,
         maxWidth: 100,
       });
-
       currentY -= 25; // Space below header row
-
       // Row 1: First Name and Date of Birth
       drawLabeledLine(page, {
         label: "First Names",
@@ -974,7 +860,6 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
         minWidth: 100,
         maxWidth: 200,
       });
-
       drawLabeledLine(page, {
         label: "Date of Birth",
         value: client1.dob || "",
@@ -986,9 +871,7 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
         minWidth: 80,
         maxWidth: 120,
       });
-
       currentY -= 25; // Space between rows
-
       // Row 2: Last Name (full width)
       drawLabeledLine(page, {
         label: "Last Name",
@@ -1001,9 +884,7 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
         minWidth: 150,
         maxWidth: 300,
       });
-
       currentY -= 25; // Space between rows
-
       // Row 3: Address (full width with wrapping)
       drawLabeledLine(page, {
         label: "Address",
@@ -1018,7 +899,6 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
         minWidth: 250,
         maxWidth: 350,
       });
-
       // Adjust spacing for wrapped address
       const client1AddressLines = client1.address
         ? wrapText(client1.address, font, 250, 12)
@@ -1026,9 +906,7 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
       if (client1AddressLines.length > 1) {
         currentY -= (client1AddressLines.length - 1) * 12;
       }
-
       currentY -= 15; // Space between rows
-
       // Row 4: Marital Status (left) and Telephone (right)
       drawLabeledLine(page, {
         label: "Marital Status",
@@ -1041,7 +919,6 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
         minWidth: 100,
         maxWidth: 150,
       });
-
       drawLabeledLine(page, {
         label: "Telephone",
         value: client1.phone || "",
@@ -1053,9 +930,7 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
         minWidth: 100,
         maxWidth: 150,
       });
-
       currentY -= 25; // Space between rows
-
       // Row 5: Mobile (left) and Email (right)
       drawLabeledLine(page, {
         label: "Mobile",
@@ -1068,7 +943,6 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
         minWidth: 100,
         maxWidth: 150,
       });
-
       drawLabeledLine(page, {
         label: "Email",
         value: client1.email || "",
@@ -1080,10 +954,8 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
         minWidth: 120,
         maxWidth: 180,
       });
-
       // Add space between Client 1 and Client 2
       currentY -= 40;
-
       // Draw Client 2 section (only if client2 exists)
       if (client2.firstName || client2.lastName) {
         page.drawText("CLIENT 2", {
@@ -1093,7 +965,6 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
           font: boldFont,
           color: rgb(0, 0, 0),
         });
-
         // Draw Client 2 title on right side
         drawLabeledLine(page, {
           label: "Title",
@@ -1106,9 +977,7 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
           minWidth: 60,
           maxWidth: 100,
         });
-
         currentY -= 25; // Space below header row
-
         // Row 1: First Name and Date of Birth
         drawLabeledLine(page, {
           label: "First Names",
@@ -1121,7 +990,6 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
           minWidth: 100,
           maxWidth: 200,
         });
-
         drawLabeledLine(page, {
           label: "Date of Birth",
           value: client2.dob || "",
@@ -1133,9 +1001,7 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
           minWidth: 80,
           maxWidth: 120,
         });
-
         currentY -= 25; // Space between rows
-
         // Row 2: Last Name (full width)
         drawLabeledLine(page, {
           label: "Last Name",
@@ -1148,9 +1014,7 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
           minWidth: 150,
           maxWidth: 300,
         });
-
         currentY -= 25; // Space between rows
-
         // Row 3: Address (full width with wrapping)
         drawLabeledLine(page, {
           label: "Address",
@@ -1165,7 +1029,6 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
           minWidth: 250,
           maxWidth: 350,
         });
-
         // Adjust spacing for wrapped address
         const client2AddressLines = client2.address
           ? wrapText(client2.address, font, 250, 12)
@@ -1173,9 +1036,7 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
         if (client2AddressLines.length > 1) {
           currentY -= (client2AddressLines.length - 1) * 12;
         }
-
         currentY -= 25; // Space between rows
-
         // Row 4: Marital Status (left) and Telephone (right)
         drawLabeledLine(page, {
           label: "Marital Status",
@@ -1188,7 +1049,6 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
           minWidth: 100,
           maxWidth: 150,
         });
-
         drawLabeledLine(page, {
           label: "Telephone",
           value: client2.phone || "",
@@ -1200,9 +1060,7 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
           minWidth: 100,
           maxWidth: 150,
         });
-
         currentY -= 25; // Space between rows
-
         // Row 5: Mobile (left) and Email (right)
         drawLabeledLine(page, {
           label: "Mobile",
@@ -1215,7 +1073,6 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
           minWidth: 100,
           maxWidth: 150,
         });
-
         drawLabeledLine(page, {
           label: "Email",
           value: client2.email || "",
@@ -1228,14 +1085,11 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
           maxWidth: 180,
         });
       }
-
       return currentY;
     };
-
     // Draw Client 1 and Client 2 vertically (Client 1 first, then Client 2 below)
     let currentY = y;
     currentY = drawClientInfoVertically(client1, client2, currentY);
-
     // Previous Will Section after client information
     const previousWill = getNestedValue(
       processedData,
@@ -1243,7 +1097,6 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
       false,
     );
     currentY -= 25; // Space before previous will
-
     // Previous Will heading with content styling
     page.drawText("Previous Will", {
       x: 50,
@@ -1252,7 +1105,6 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
       font: boldFont,
       color: rgb(0, 0, 0),
     });
-
     // Previous Will with Yes/No radio buttons on the same line
     drawYesNoRow(
       page,
@@ -1265,19 +1117,15 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
         gap: 20,
       },
     );
-
     currentY -= 0; // Space after both heading and radio buttons
     currentY -= 0; // Extra space after previous will
-
     // Meeting Attendees Section after client information
     const meetingAttendees = getNestedValue(
       processedData,
       "clientDetails.meetingAttendees",
       {},
     );
-    
     currentY -= 20; // Space before meeting attendees section
-
     // "Is any one else present at the meeting?" question
     page.drawText("Is any one else present at the meeting?", {
       x: 50,
@@ -1286,7 +1134,6 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
       font,
       color: rgb(0, 0, 0),
     });
-
     // Yes/No radio buttons for meeting attendees
     drawYesNoRow(
       page,
@@ -1299,9 +1146,7 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
         gap: 20,
       },
     );
-
     currentY -= 25; // Space after the question and radio buttons
-
     if (meetingAttendees.isAnyoneElsePresent) {
       // "If yes, Names?" and "Relationship?" fields on the same row
       drawLabeledLine(page, {
@@ -1315,7 +1160,6 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
         minWidth: 100,
         maxWidth: 180,
       });
-
       drawLabeledLine(page, {
         label: "Relationship?",
         value: meetingAttendees.relationship || "",
@@ -1327,18 +1171,14 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
         minWidth: 80,
         maxWidth: 150,
       });
-
       currentY -= 25; // Space after names and relationship
     }
-
     // CHILDREN, CONCERNS & EXCLUSIONS, FINANCIAL INFO, GUARDIANS, FUNERAL, EXECUTORS
     // will continue on subsequent pages to keep code maintainable and
     // to better match the multi‑page paper template.
-
     // For now we add a second page that focuses on children & financial info.
     let page2 = pdfDoc.addPage([width, height]);
     let y2 = height - 60;
-
     // Official use only / Services required block (top of second page)
     const services = getSafeValue(
       safeFormData,
@@ -1349,11 +1189,9 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
     const otherServices = Array.isArray(services.otherServices)
       ? services.otherServices.join(", ")
       : "";
-
     // Draw the grey box first
     const officialBoxHeight = 60;
     const officialY = 720; // Fixed position near top of second page (A4 height is 841.89)
-
     // Draw the grey background box
     drawRoundedRect(
       page2,
@@ -1365,10 +1203,8 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
       rgb(0.94, 0.94, 0.94),
       rgb(0.8, 0.8, 0.8)
     );
-
     // Draw "Official use only" text above the grey box
     let oy = officialY + officialBoxHeight + 10; // Position above the box
-
     page2.drawText("Official use only:", {
       x: 45,
       y: oy,
@@ -1376,13 +1212,10 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
       font: boldFont,
       color: rgb(0, 0, 0),
     });
-
     oy -= 25; // Space before checkboxes
-
     const drawSimpleBox = (label, checked, xPos) => {
       const boxSize = 8;
       const bx = xPos;
-
       // Draw the checkbox
       page2.drawRectangle({
         x: bx,
@@ -1392,7 +1225,6 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
         borderWidth: 0.8,
         borderColor: rgb(0, 0, 0),
       });
-
       if (checked) {
         page2.drawRectangle({
           x: bx + 1.5,
@@ -1402,7 +1234,6 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
           color: rgb(0, 0, 0),
         });
       }
-
       // Draw the label text to the right of the checkbox, vertically aligned
       const textY = oy - boxSize + 4;
       page2.drawText(label, {
@@ -1413,7 +1244,6 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
         color: rgb(0, 0, 0),
       });
     };
-
     // Check actual services from data and mark checkboxes accordingly
     drawSimpleBox("Wills", selectedServices.includes("wills"), 55);
     drawSimpleBox("LPAs", selectedServices.includes("lpas"), 120);
@@ -1423,9 +1253,7 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
     drawSimpleBox("FLIT", selectedServices.includes("flit"), 390);
     drawSimpleBox("VPT", selectedServices.includes("vpt"), 440);
     drawSimpleBox("FPT", selectedServices.includes("fpt"), 490);
-
     oy -= 20;
-
     page2.drawText("Other:", {
       x: 55,
       y: oy,
@@ -1433,7 +1261,6 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
       font: boldFont,
       color: rgb(0, 0, 0),
     });
-
     if (otherServices) {
       page2.drawText(otherServices, {
         x: 95,
@@ -1444,28 +1271,21 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
         maxWidth: width - 130,
       });
     }
-
     // Update y2 position to account for the Official use only section
     y2 = 680; // Fixed position below the Official use only section
-
     // WILL INSTRUCTION SECTION HEADER
     // y2 = drawSectionHeader(page2, "WILL INSTRUCTION", y2 + 4);
     // y2 -= 10; // Space after header
-
     // CHILDREN SECTION HEADER
     y2 = drawSectionHeader(page2, "CHILDREN", y2 + 4);
     y2 -= 0; // Space after header
-
     const children = Array.isArray(processedData.willInstructions.children)
       ? processedData.willInstructions.children
       : [];
-
     // Only render as many CHILD sections as there are actual children
     const maxChildren = children.length;
-
     for (let i = 0; i < maxChildren; i++) {
       const child = children[i] || {};
-
       // Draw the child number above the box with more space
       page2.drawText(`CHILD ${i + 1}`, {
         x: 45,
@@ -1474,14 +1294,11 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
         font: boldFont,
         color: rgb(0, 0, 0),
       });
-
       // Position the box below the heading with more space
       y2 -= 15; // Increased space between heading and box
-
       // Alternate grey backgrounds to mimic template bands
       const bandHeight = 160; // Increased from 130 to accommodate all data
       const isEven = i % 2 === 0;
-
       // Draw the grey box with alternating colors and rounded corners
       drawRoundedRect(
         page2,
@@ -1493,10 +1310,8 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
         isEven ? rgb(0.94, 0.94, 0.95) : rgb(0.98, 0.98, 0.98), // Darker for odd, lighter for even
         null // No border color
       );
-
       // Left column
       let cy = y2 - 12;
-
       drawLabeledLine(page2, {
         label: "Title",
         value: getSafeValue(child, "title", ""),
@@ -1507,9 +1322,7 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
         minWidth: 50,
         maxWidth: 100,
       });
-
       cy -= 16;
-
       drawLabeledLine(page2, {
         label: "Full Name",
         value: getSafeValue(child, "fullName", ""),
@@ -1520,9 +1333,7 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
         minWidth: 100,
         maxWidth: 200,
       });
-
       cy -= 16;
-
       drawLabeledLine(page2, {
         label: "Date of Birth",
         value: getSafeValue(child, "dob", ""),
@@ -1533,9 +1344,7 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
         minWidth: 80,
         maxWidth: 120,
       });
-
       cy -= 16;
-
       // Address field taking FULL WIDTH (like relationship field)
       drawLabeledLine(page2, {
         label: "Address",
@@ -1550,16 +1359,13 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
         minWidth: 150,
         maxWidth: 450,
       });
-
       cy -= 25; // Extra space before relationship field
-
       // Adjust spacing based on address length
       const address = getSafeValue(child, "address", "");
       if (address && address.length > 30) {
         const addressLines = wrapText(address, font, 450, 12);
         cy -= (addressLines.length - 1) * 12; // Add extra space for additional lines
       }
-
       // Relationship to Client 1 (NEXT ROW)
       page2.drawText("Relationship to:", {
         x: 45,
@@ -1568,9 +1374,7 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
         font: boldFont,
         color: rgb(0, 0, 0),
       });
-
       cy -= 16;
-
       drawLabeledLine(page2, {
         label: "Client 1",
         value: getSafeValue(child, "relationshipClient1", ""),
@@ -1582,9 +1386,7 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
         minWidth: 80,
         maxWidth: 150,
       });
-
       cy -= 16;
-
       drawLabeledLine(page2, {
         label: "Client 2",
         value: getSafeValue(child, "relationshipClient2", ""),
@@ -1596,10 +1398,8 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
         minWidth: 80,
         maxWidth: 150,
       });
-
       // Increased spacing between child sections
       y2 -= bandHeight + 60; // Much more space between children
-
       if (y2 < 180 && i < maxChildren - 1) {
         // Increased threshold from 140 to 180 to account for larger spacing
         // New page for remaining children
@@ -1607,14 +1407,12 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
         y2 = height - 60;
       }
     }
-
     // CHILDREN CONCERNS / EXCLUSIONS
     if (y2 < 160) {
       // Further reduced threshold for page break
       page2 = pdfDoc.addPage([width, height]);
       y2 = height - 90; // Start even lower on the new page
     }
-
     const drawTextAreaBlock = ({ page: pg, heading, label, value, topY }) => {
       pg.drawText(heading, {
         x: 50,
@@ -1623,7 +1421,6 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
         font: boldFont,
         color: rgb(0, 0, 0),
       });
-
       pg.drawText(label, {
         x: 50,
         y: topY - 14,
@@ -1631,10 +1428,8 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
         font,
         color: rgb(0, 0, 0),
       });
-
       const boxY = topY - 24;
       const boxHeight = 70;
-
       drawRoundedRect(
         pg,
         45,
@@ -1645,18 +1440,14 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
         rgb(0.94, 0.94, 0.94),
         rgb(0.8, 0.8, 0.8)
       );
-
       if (value && value !== "Not provided") {
         // Draw text inside grey box with proper wrapping
         const textLines = wrapText(value, font, width - 110, 9);
-
         // Start text from top of box with proper padding
         const startY = boxY - 15; // Start from top of box
         const lineHeight = 11;
-
         textLines.forEach((line, lineIndex) => {
           const lineY = startY - lineIndex * lineHeight;
-
           // Only draw if text is still within box bounds
           if (lineY > boxY - boxHeight + 10) {
             pg.drawText(line, {
@@ -1669,24 +1460,19 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
           }
         });
       }
-
       return boxY - boxHeight - 20;
     };
-
     const childrenConcerns = getSafeValue(
       formData,
       "willInstructions.childrenConcernsDetails",
       "",
     );
-
     const hasChildrenConcerns = getSafeValue(
       formData,
       "willInstructions.hasChildrenConcerns",
       "",
     );
-
     y2 -= 0; // Add extra space before children concerns question
-
     // Children's Concerns heading
     page2.drawText("Children's Concerns", {
       x: 35,
@@ -1695,9 +1481,7 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
       font: boldFont,
       color: rgb(0, 0, 0),
     });
-
     y2 -= 10; // Space after heading
-
     drawYesNoRow(page2, {
       label:
         "Are there any concerns about children's relationships, finances, disabilities or vulnerabilities?",
@@ -1705,9 +1489,7 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
       x: 35,
       y: y2,
     });
-
     y2 -= 10;
-
     y2 = drawTextAreaBlock({
       page: page2,
       heading: "",
@@ -1715,7 +1497,6 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
       value: childrenConcerns,
       topY: y2,
     });
-
     const hasDisinheritance = getSafeValue(
       formData,
       "willInstructions.hasDisinheritance",
@@ -1730,35 +1511,28 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
       font: boldFont,
       color: rgb(0, 0, 0),
     });
-
     y2 -= 10; // Space after heading
-
     drawYesNoRow(page2, {
       label: "Are there any children to be deliberately excluded?",
       value: hasDisinheritance,
       x: 35,
       y: y2,
     });
-
     y2 -= 20; // Further reduced vertical spacing after excluded children question
-
     const disinherited = getSafeValue(
       formData,
       "willInstructions.disinheritedChildren",
       [],
     );
-
     const disinheritText = Array.isArray(disinherited)
       ? disinherited
-          .map(
-            (d, idx) =>
-              `${idx + 1}. ${d.name || "Name not provided"} – ${
-                d.relationship || "Relationship not provided"
-              }`,
-          )
-          .join("\n")
+        .map(
+          (d, idx) =>
+            `${idx + 1}. ${d.name || "Name not provided"} – ${d.relationship || "Relationship not provided"
+            }`,
+        )
+        .join("\n")
       : formatValue(disinherited, {});
-
     // Add "If yes, names and relationships?" section right after the exclusion question
     page2.drawText("If yes, names and relationships?", {
       x: 35,
@@ -1767,11 +1541,9 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
       // font: boldFont,
       color: rgb(0, 0, 0),
     });
-
     // Position the grey box below the label with some spacing
     const boxY = y2 - 5; // Position the box below the label with some space
     const boxHeight = 50; // Height of the grey box
-
     // Draw the grey background
     drawRoundedRect(
       page2,
@@ -1783,12 +1555,10 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
       rgb(0.94, 0.94, 0.94),
       rgb(0.8, 0.8, 0.8)
     );
-
     // Draw the excluded children text inside the box
     if (disinheritText) {
       const lines = disinheritText.split("\n");
       let textY = boxY - 20; // Start from top of box with some padding
-
       lines.forEach((line) => {
         if (line.trim()) {
           page2.drawText(line, {
@@ -1802,16 +1572,13 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
         }
       });
     }
-
     y2 = boxY - 20; // Space after the grey box
-
     /**
      * FINANCIAL INFORMATION (foreign property + assets/liabilities)
      * Separate page to keep layout close to the template table.
      */
     const page3 = pdfDoc.addPage([width, height]);
     let y3 = height - 80; // Start lower on the financial info page
-
     // Section band - reduced height
     page3.drawRectangle({
       x: 0,
@@ -1820,7 +1587,6 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
       height: 26,
       color: rgb(0.1, 0.1, 0.11),
     });
-
     page3.drawText("FINANCIAL INFORMATION", {
       x: 50,
       y: y3 + 8,
@@ -1828,20 +1594,15 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
       font: boldFont,
       color: rgb(1, 1, 1),
     });
-
     y3 -= 40;
-
     const financialInfo = processedData.willInstructions.financialInfo || {};
-
     drawYesNoRow(page3, {
       label: "Do you own any foreign property?",
       value: financialInfo.hasForeignProperty,
       x: 50,
       y: y3,
     });
-
     y3 -= 25;
-
     drawLabeledLine(page3, {
       label: "If yes, where?",
       value: financialInfo.foreignLocation,
@@ -1853,27 +1614,21 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
       minWidth: 150,
       maxWidth: 300,
     });
-
     y3 -= 35;
-
     drawYesNoRow(page3, {
       label: "Is there a Will in that country",
       value: financialInfo.hasForeignWill,
       x: 50,
       y: y3,
     });
-
     y3 -= 25;
-
     drawYesNoRow(page3, {
       label: "Mention in this Will?",
       value: financialInfo.mentionInThisWill,
       x: 50,
       y: y3,
     });
-
     y3 -= 40;
-
     // Assets & Liabilities tables (simplified but aligned with template)
     const drawMoneyTable = ({ page: pg, heading, rows, startY }) => {
       pg.drawText(heading, {
@@ -1883,11 +1638,9 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
         font: boldFont,
         color: rgb(0, 0, 0),
       });
-
       const colJointX = 260;
       const colC1X = 340;
       const colC2X = 420;
-
       pg.drawText("Joint", {
         x: colJointX,
         y: startY,
@@ -1909,11 +1662,8 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
         font: boldFont,
         color: rgb(0, 0, 0),
       });
-
       let rowY = startY - 16;
-
       const safeRows = Array.isArray(rows) ? rows : [];
-
       safeRows.forEach((row) => {
         pg.drawText(row.label || "", {
           x: 50,
@@ -1922,7 +1672,6 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
           font,
           color: rgb(0, 0, 0),
         });
-
         const writeMoney = (val, xCol) => {
           const txt =
             val !== undefined && val !== null && String(val).trim() !== ""
@@ -1939,17 +1688,13 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
           }
           drawUnderline(pg, xCol - 5, xCol + 55, rowY - 2);
         };
-
         writeMoney(row.joint, colJointX);
         writeMoney(row.c1, colC1X);
         writeMoney(row.c2, colC2X);
-
         rowY -= 16;
       });
-
       return rowY - 12; // Further reduced vertical spacing in money table
     };
-
     // Assets table and its total
     y3 = drawMoneyTable({
       page: page3,
@@ -1957,7 +1702,6 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
       rows: financialInfo.assets || [],
       startY: y3,
     });
-
     // Calculate and display assets total immediately below assets table
     const assets = financialInfo.assets || [];
     const calculateTotals = (items) => {
@@ -1976,12 +1720,9 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
         { joint: 0, c1: 0, c2: 0, total: 0 },
       );
     };
-
     const assetTotals = calculateTotals(assets);
-
     // Assets Total - positioned directly below assets table
     y3 -= 5; // Small space between table and total
-    
     page3.drawText("Total Assets:", {
       x: 50,
       y: y3,
@@ -1989,7 +1730,6 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
       font: boldFont,
       color: rgb(0, 0, 0),
     });
-
     const writeTotal = (val, xCol) => {
       const txt = `£${val.toFixed(2)}`;
       page3.drawText(txt, {
@@ -2001,14 +1741,11 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
       });
       drawUnderline(page3, xCol - 5, xCol + 55, y3 - 2);
     };
-
     // Use same column positions as data: Joint (260), Client 1 (340), Client 2 (420)
     writeTotal(assetTotals.joint, 260);
     writeTotal(assetTotals.c1, 340);
     writeTotal(assetTotals.c2, 420);
-
     y3 -= 25; // Space before liabilities section
-
     // Liabilities table and its total
     y3 = drawMoneyTable({
       page: page3,
@@ -2016,14 +1753,11 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
       rows: financialInfo.liabilities || [],
       startY: y3,
     });
-
     // Calculate and display liabilities total immediately below liabilities table
     const liabilities = financialInfo.liabilities || [];
     const liabilityTotals = calculateTotals(liabilities);
-
     // Liabilities Total - positioned directly below liabilities table
     y3 -= 5; // Small space between table and total
-    
     page3.drawText("Total Liabilities:", {
       x: 50,
       y: y3,
@@ -2031,14 +1765,11 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
       font: boldFont,
       color: rgb(0, 0, 0),
     });
-
     // Use same column positions as data: Joint (260), Client 1 (340), Client 2 (420)
     writeTotal(liabilityTotals.joint, 260);
     writeTotal(liabilityTotals.c1, 340);
     writeTotal(liabilityTotals.c2, 420);
-
     y3 -= 25; // Space before net estate
-
     // Net Estate calculation and display
     const netEstate = {
       joint: assetTotals.joint - liabilityTotals.joint,
@@ -2046,7 +1777,6 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
       c2: assetTotals.c2 - liabilityTotals.c2,
       total: assetTotals.total - liabilityTotals.total,
     };
-
     // Net Estate
     page3.drawText("Net Estate:", {
       x: 50,
@@ -2055,7 +1785,6 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
       font: boldFont,
       color: rgb(0, 0, 0),
     });
-
     const writeNetEstate = (val, xCol) => {
       const txt = `£${val.toFixed(2)}`;
       page3.drawText(txt, {
@@ -2068,31 +1797,25 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
       // Single underline for net estate
       drawUnderline(page3, xCol - 5, xCol + 55, y3 - 2);
     };
-
     writeNetEstate(netEstate.joint, 260);
     writeNetEstate(netEstate.c1, 340);
     writeNetEstate(netEstate.c2, 420);
-
     /**
      * FUNERAL WISHES SECTION
      * Order: 4. Funeral Wishes (after Financial Information)
      */
     let page4 = pdfDoc.addPage([width, height]);
     let y4 = height - 40; // Start higher on the page for more space
-
     // Draw section header
     y4 = drawSectionHeader(page4, "FUNERAL ARRANGEMENTS", y4 + 4);
     y4 -= 2; // Reduced space after header
-
     const funeral = getSafeValue(
       formData,
       "willInstructions.funeralWishes",
       {},
     );
-
     // Client 1 Funeral Wishes
     const wishes = funeral.client1Wishes || {};
-
     if (
       wishes.cremation ||
       wishes.burial ||
@@ -2106,10 +1829,8 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
         font: boldFont,
         color: rgb(0, 0, 0),
       });
-
       y4 -= 18;
     }
-
     const drawFuneralOption = (label, key) => {
       drawLabeledLine(page4, {
         label,
@@ -2121,11 +1842,9 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
       });
       y4 -= 16;
     };
-
     drawFuneralOption("Cremation", "cremation");
     drawFuneralOption("Burial", "burial");
     drawFuneralOption("Undecided", "undecided");
-
     // Client 1 Other Funeral Wishes - Grey Box
     const client1Other = funeral.client1Other || "";
     if (client1Other) {
@@ -2137,24 +1856,19 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
         font: boldFont,
         color: rgb(0, 0, 0),
       });
-
       y4 -= 0; // Space after heading
-
       // Calculate dynamic height for client 1 other box
       const lineHeight = 12;
       const maxWidth = width - 110;
       const padding = 16; // Top and bottom padding
-
       // Calculate text height
       let textHeight = 0;
       const words = client1Other.split(" ");
       let currentLine = "";
       let lines = [];
-
       for (const word of words) {
         const testLine = currentLine ? `${currentLine} ${word}` : word;
         const testWidth = font.widthOfTextAtSize(testLine, 9);
-
         if (testWidth <= maxWidth) {
           currentLine = testLine;
         } else {
@@ -2163,13 +1877,10 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
         }
       }
       if (currentLine) lines.push(currentLine);
-
       textHeight = lines.length * lineHeight;
-
       // Dynamic box height based on text content
       const boxHeight = textHeight + padding;
       const boxY = y4 - boxHeight - 10;
-
       // Draw grey box
       drawRoundedRect(
         page4,
@@ -2181,7 +1892,6 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
         rgb(0.94, 0.94, 0.94),
         rgb(0.8, 0.8, 0.8)
       );
-
       // Draw text inside box
       page4.drawText(client1Other, {
         x: 52,
@@ -2192,15 +1902,11 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
         maxWidth: width - 110,
         lineHeight: 12,
       });
-
       y4 = boxY - 10;
     }
-
     y4 -= 24;
-
     // Client 2 Funeral Wishes
     const client2Wishes = funeral.client2Wishes || {};
-
     if (
       client2Wishes.cremation ||
       client2Wishes.burial ||
@@ -2214,9 +1920,7 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
         font: boldFont,
         color: rgb(0, 0, 0),
       });
-
       y4 -= 18;
-
       const drawFuneralOption2 = (label, key) => {
         drawLabeledLine(page4, {
           label,
@@ -2228,11 +1932,9 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
         });
         y4 -= 16;
       };
-
       drawFuneralOption2("Cremation", "cremation");
       drawFuneralOption2("Burial", "burial");
       drawFuneralOption2("Undecided", "undecided");
-
       // Client 2 Other Funeral Wishes - Grey Box
       const client2Other = funeral.client2Other || "";
       if (client2Other) {
@@ -2244,24 +1946,19 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
           font: boldFont,
           color: rgb(0, 0, 0),
         });
-
         y4 -= 0; // Space after heading
-
         // Calculate dynamic height for client 2 other box
         const lineHeight = 12;
         const maxWidth = width - 110;
         const padding = 16; // Top and bottom padding
-
         // Calculate text height
         let textHeight = 0;
         const words = client2Other.split(" ");
         let currentLine = "";
         let lines = [];
-
         for (const word of words) {
           const testLine = currentLine ? `${currentLine} ${word}` : word;
           const testWidth = font.widthOfTextAtSize(testLine, 9);
-
           if (testWidth <= maxWidth) {
             currentLine = testLine;
           } else {
@@ -2270,13 +1967,10 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
           }
         }
         if (currentLine) lines.push(currentLine);
-
         textHeight = lines.length * lineHeight;
-
         // Dynamic box height based on text content
         const boxHeight = textHeight + padding;
         const boxY = y4 - boxHeight - 10;
-
         // Draw grey box
         drawRoundedRect(
           page4,
@@ -2288,7 +1982,6 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
           rgb(0.94, 0.94, 0.94),
           rgb(0.8, 0.8, 0.8)
         );
-
         // Draw text inside box
         page4.drawText(client2Other, {
           x: 52,
@@ -2299,13 +1992,10 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
           maxWidth: width - 110,
           lineHeight: 12,
         });
-
         y4 = boxY - 10;
       }
-
       y4 -= 14;
     }
-
     // Additional Funeral Wishes - Grey Box
     const additionalFuneral = funeral.additionalWishes || "";
     if (additionalFuneral) {
@@ -2317,24 +2007,19 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
         font: boldFont,
         color: rgb(0, 0, 0),
       });
-
       y4 -= 0; // Space after heading
-
       // Calculate dynamic height for additional funeral box
       const lineHeight = 12;
       const maxWidth = width - 110;
       const padding = 16; // Top and bottom padding
-
       // Calculate text height
       let textHeight = 0;
       const words = additionalFuneral.split(" ");
       let currentLine = "";
       let lines = [];
-
       for (const word of words) {
         const testLine = currentLine ? `${currentLine} ${word}` : word;
         const testWidth = font.widthOfTextAtSize(testLine, 9);
-
         if (testWidth <= maxWidth) {
           currentLine = testLine;
         } else {
@@ -2343,13 +2028,10 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
         }
       }
       if (currentLine) lines.push(currentLine);
-
       textHeight = lines.length * lineHeight;
-
       // Dynamic box height based on text content
       const boxHeight = textHeight + padding;
       const boxY = y4 - boxHeight - 10;
-
       // Draw grey box
       drawRoundedRect(
         page4,
@@ -2361,7 +2043,6 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
         rgb(0.94, 0.94, 0.94),
         rgb(0.8, 0.8, 0.8)
       );
-
       // Draw text inside box
       page4.drawText(additionalFuneral, {
         x: 52,
@@ -2372,10 +2053,8 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
         maxWidth: width - 110,
         lineHeight: 12,
       });
-
       y4 = boxY - 30;
     }
-
     /**
      * EXECUTORS SECTION
      * Order: 5. Executors (after Funeral Wishes)
@@ -2384,37 +2063,29 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
       page4 = pdfDoc.addPage([width, height]);
       y4 = height - 60;
     }
-
     y4 = drawSectionHeader(page4, "EXECUTORS", y4 + 4);
     y4 -= 2; // Reduced space after header
-
     y4 -= 2;
-
     // Add the question right after EXECUTORS heading
     const clientsNominatingEachOther = getSafeValue(
       formData,
       "willInstructions.clientsNominatingEachOther",
       "",
     );
-
     y4 -= 0;
-
     drawYesNoRow(page4, {
       label: "Are clients nominating each other as executor on first death?",
       value: clientsNominatingEachOther,
       x: 50,
       y: y4,
     });
-
     y4 -= 20; // Space after the question
-
     // Check if we need a new page for Client 1 Executors
     const client1Executors = getSafeValue(
       formData,
       "willInstructions.client1Executors",
       [],
     );
-    
     // Calculate required height for Client 1 Executors
     let client1Height = 35; // Heading + padding
     if (Array.isArray(client1Executors) && client1Executors.length > 0) {
@@ -2430,19 +2101,16 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
         }
       });
     }
-    
     // Check if Client 1 Executors fits, if not create new page
     if (y4 - client1Height < 100) {
       page4 = pdfDoc.addPage([width, height]);
       y4 = height - 60;
     }
-
     const client2Executors = getSafeValue(
       formData,
       "willInstructions.client2Executors",
       [],
     );
-    
     // Calculate required height for Client 2 Executors
     let client2Height = 35; // Heading + padding
     if (Array.isArray(client2Executors) && client2Executors.length > 0) {
@@ -2458,7 +2126,6 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
         }
       });
     }
-    
     // Check if both Client 1 and Client 2 Executors fit on current page
     if (y4 - client1Height - 20 - client2Height < 100) {
       // If both don't fit, check if at least Client 1 fits
@@ -2468,16 +2135,13 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
       }
       // Client 2 will go to next page automatically
     }
-
     const drawExecutorList = ({ label, list, topY, isClient1 = false }) => {
       let ey = topY;
-      
       // Calculate exact section height dynamically
       let sectionHeight = 45; // Increased height for heading + top padding (was 35)
       if (Array.isArray(list) && list.length > 0) {
         sectionHeight += list.length * 36; // Increased height per executor (was 32)
         sectionHeight += (list.length - 1) * 8; // Increased spacing between executors (was 4)
-        
         // Add extra height for wrapped addresses
         list.forEach((ex) => {
           const address = getSafeValue(ex, "address", "");
@@ -2491,7 +2155,6 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
       } else {
         sectionHeight += 25; // Increased height for "None specified" (was 20)
       }
-      
       // Draw background for the entire section with rounded corners
       drawRoundedRect(
         page4,
@@ -2503,10 +2166,8 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
         isClient1 ? rgb(0.85, 0.85, 0.85) : rgb(0.95, 0.95, 0.95),
         null // No border color
       );
-      
       // Move heading inside background with top padding
       ey -= 10; // Top padding inside background
-      
       page4.drawText(label, {
         x: 50,
         y: ey,
@@ -2515,7 +2176,6 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
         color: rgb(0, 0, 0),
       });
       ey -= 18;
-
       if (!Array.isArray(list) || list.length === 0) {
         drawLabeledLine(page4, {
           label: "Executors",
@@ -2530,7 +2190,6 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
         });
         return ey - 20;
       }
-
       list.forEach((ex, idx) => {
         // Commented out title field
         // drawLabeledLine(page4, {
@@ -2544,9 +2203,7 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
         //   minWidth: 50,
         //   maxWidth: 100,
         // });
-
         // ey -= 16;
-
         // Row 1: Full Name (left) and Relationship (right) in same row
         drawLabeledLine(page4, {
           label: `Full Name`,
@@ -2559,7 +2216,6 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
           minWidth: 100,
           maxWidth: 250,
         });
-
         drawLabeledLine(page4, {
           label: "Relationship",
           value: getSafeValue(ex, "relationship", ""),
@@ -2571,9 +2227,7 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
           minWidth: 80,
           maxWidth: 200,
         });
-
         ey -= 16;
-
         // Row 2: Executor Type (left) and empty space (right) in same row
         drawLabeledLine(page4, {
           label: "Executor Type",
@@ -2586,14 +2240,11 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
           minWidth: 100,
           maxWidth: 250,
         });
-
         ey -= 16;
-
         // Row 3: Address (full width) with dynamic height calculation
         const address = getSafeValue(ex, "address", "");
         if (address) {
           const lines = wrapText(address, font, width - 220, 9);
-          
           drawLabeledLine(page4, {
             label: "Address",
             value: address,
@@ -2607,41 +2258,33 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
             shouldWrapText: true,
             lineHeight: 12,
           });
-
           // Adjust Y position for wrapped address
           if (lines.length > 1) {
             ey -= (lines.length - 1) * 12;
           }
         }
-
         ey -= 20;
       });
-
       return ey - 10;
     };
-
     y4 = drawExecutorList({
       label: "Client 1 Executors",
       list: client1Executors,
       topY: y4,
       isClient1: true, // Dark background for Client 1
     });
-
     y4 -= 20; // Reduced space between Client 1 and Client 2 executors
-
     // Check if we need a new page for Client 2 Executors
     if (y4 - client2Height < 100) {
       page4 = pdfDoc.addPage([width, height]);
       y4 = height - 60;
     }
-
     y4 = drawExecutorList({
       label: "Client 2 Executors",
       list: client2Executors,
       topY: y4,
       isClient1: false, // Light background for Client 2
     });
-
     // y4 -= 15; // Removed spacing
     // drawYesNoRow(page4, {
     //   label: "Are clients nominating each other as executor on first death?",
@@ -2649,9 +2292,7 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
     //   x: 50,
     //   y: y4,
     // });
-
     // y4 -= 40; // Removed spacing
-
     /**
      * LEGACIES/BEQUESTS SECTION
      * Order: 6. Legacies/Bequests (after Executors)
@@ -2660,54 +2301,44 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
       page4 = pdfDoc.addPage([width, height]);
       y4 = height - 60;
     }
-
     y4 = drawSectionHeader(page4, "LEGACIES / BEQUESTS", y4 + 4);
     y4 -= 10;
-
     const bequests = getSafeValue(formData, "willInstructions.bequests", []);
-
     if (Array.isArray(bequests) && bequests.length > 0) {
       bequests.forEach((bequest, idx) => {
         // Calculate bequest section height dynamically first
         let bequestHeight = 180; // Base height
-        
         // Add extra height for first bequest (Bequest 1)
         if (idx === 0) {
           bequestHeight += 20; // Extra space for Bequest 1
         }
-        
         // Add extra height for conditional fields
         if (bequest.giftType === "Money") {
           bequestHeight += 25;
         } else {
           bequestHeight += 40;
         }
-        
         if (bequest.vestingAge) {
           bequestHeight += 25;
         }
-        
         // Add dynamic height for Class Gift if it exists
         if (bequest.classGift) {
           const classGiftLines = wrapText(bequest.classGift, font, 380, 12);
           const classGiftHeight = classGiftLines.length * 12 + 8;
           bequestHeight += Math.max(0, classGiftHeight - 20) + 20; // Add extra 20px buffer
         }
-        
         // Add dynamic height for Other Conditions if it exists
         if (bequest.otherConditions) {
           const otherConditionsLines = wrapText(bequest.otherConditions, font, 380, 12);
           const otherConditionsHeight = otherConditionsLines.length * 12 + 8;
           bequestHeight += Math.max(0, otherConditionsHeight - 30) + 30; // Add extra 30px buffer
         }
-
         // Check if we need a new page for this bequest (especially for Bequest 2+)
         const requiredSpace = bequestHeight + 50; // Extra buffer
         if (y4 < requiredSpace || (idx > 0 && y4 < 300)) {
           page4 = pdfDoc.addPage([width, height]);
           y4 = height - 60;
         }
-
         // Draw alternating background before the bequest content with rounded corners
         const isEven = idx % 2 === 0;
         drawRoundedRect(
@@ -2720,7 +2351,6 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
           isEven ? rgb(0.94, 0.94, 0.95) : rgb(0.98, 0.98, 0.98), // Darker for odd, lighter for even
           null // No border color
         );
-
         page4.drawText(`Bequest ${idx + 1}`, {
           x: 50,
           y: y4,
@@ -2729,7 +2359,6 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
           color: rgb(0, 0, 0),
         });
         y4 -= 20; // Increased from 18 for more spacing
-
         drawLabeledLine(page4, {
           label: "Gift Type",
           value: bequest.giftType || "",
@@ -2742,13 +2371,11 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
           maxWidth: 250,
         });
         y4 -= 20; // Increased from 18 for more spacing
-
         // Class Gift with proper height calculation
         const classGiftText = bequest.classGift || "";
         if (classGiftText) {
           const classGiftLines = wrapText(classGiftText, font, 420, 12);
           const classGiftHeight = Math.max(20, classGiftLines.length * 12 + 8); // Minimum 20, or calculated height
-          
           drawLabeledLine(page4, {
             label: "Class Gift",
             value: classGiftText,
@@ -2764,7 +2391,6 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
         } else {
           y4 -= 20; // Default spacing if no content
         }
-
         drawLabeledLine(page4, {
           label: "Beneficiary Name",
           value: bequest.beneficiaryName || "",
@@ -2777,7 +2403,6 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
           maxWidth: 300,
         });
         y4 -= 20; // Increased from 18 for more spacing
-
         drawLabeledLine(page4, {
           label: "Who is making this bequest",
           value: Array.isArray(bequest.bequestBy) ? bequest.bequestBy.join(", ") : (bequest.bequestBy || ""),
@@ -2790,7 +2415,6 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
           maxWidth: 300,
         });
         y4 -= 20; // Increased from 18 for more spacing
-
         drawLabeledLine(page4, {
           label: "Relationship",
           value: bequest.relationship || "",
@@ -2803,7 +2427,6 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
           maxWidth: 250,
         });
         y4 -= 20; // Increased from 18 for more spacing
-
         drawLabeledLine(page4, {
           label: "How should this gift be held",
           value: Array.isArray(bequest.giftHolding) ? bequest.giftHolding.join(", ") : (bequest.giftHolding || ""),
@@ -2816,7 +2439,6 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
           maxWidth: 400,
         });
         y4 -= 20; // Increased from 18 for more spacing
-
         if (bequest.giftType === "Money") {
           drawLabeledLine(page4, {
             label: "Amount",
@@ -2846,9 +2468,7 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
           });
           y4 -= 30;
         }
-
         y4 -= 12;
-
         drawLabeledLine(page4, {
           label: "Beneficiary Address",
           value: bequest.beneficiaryAddress || "",
@@ -2863,7 +2483,6 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
           maxWidth: 380, // Same as Other Conditions
         });
         y4 -= 35; // Increased from 33 for more spacing
-
         if (bequest.vestingAge) {
           drawLabeledLine(page4, {
             label: "Age of Vesting",
@@ -2878,13 +2497,11 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
           });
           y4 -= 20; // Increased from 18 for more spacing
         }
-
         // Other Conditions with proper height calculation
         const otherConditionsText = bequest.otherConditions || "";
         if (otherConditionsText) {
           const otherConditionsLines = wrapText(otherConditionsText, font, 380, 12);
           const otherConditionsHeight = Math.max(20, otherConditionsLines.length * 12 + 8);
-          
           drawLabeledLine(page4, {
             label: "Other Conditions",
             value: otherConditionsText,
@@ -2898,7 +2515,6 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
           });
           y4 -= otherConditionsHeight + 5;
         }
-
         y4 -= 50; // Increased from 40 to 50 for more space between bequests
       });
     } else {
@@ -2915,7 +2531,6 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
       });
       y4 -= 30;
     }
-
     /**
      * PROPERTY TRUSTS/ROO SECTION
      * Order: 7. Property Trusts/ROO (after Bequests)
@@ -2924,22 +2539,18 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
       page4 = pdfDoc.addPage([width, height]);
       y4 = height - 60;
     }
-
     y4 -= 30; // Add space BEFORE the section header
     y4 = drawSectionHeader(page4, "PROPERTY TRUSTS / ROO", y4 + 4);
     y4 -= 10; // Add space AFTER the header
-
     const propertyTrusts = getSafeValue(
       formData,
       "willInstructions.propertyTrusts",
       [],
     );
-
     console.log("=== PROPERTY TRUSTS DEBUG ===");
     console.log("Property Trusts Data:", propertyTrusts);
     console.log("Is Array:", Array.isArray(propertyTrusts));
     console.log("Length:", propertyTrusts.length);
-
     if (Array.isArray(propertyTrusts) && propertyTrusts.length > 0) {
       propertyTrusts.forEach((trust, idx) => {
         // For the first trust, use available space; for others, use new page
@@ -2956,7 +2567,6 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
             y4 = height - 60;
           }
         }
-
         page4.drawText(`Property Trust ${idx + 1}`, {
           x: 50,
           y: y4,
@@ -2965,7 +2575,6 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
           color: rgb(0, 0, 0),
         });
         y4 -= 20; // Increased from 18 for more spacing
-
         // 1. Trust Type
         drawLabeledLine(page4, {
           label: "Trust Type",
@@ -2979,7 +2588,6 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
           maxWidth: 200, // Reduced from 250
         });
         y4 -= 20; // Increased from 18 for more spacing
-
         // 2. Who requires this trust?
         if (trust.whoRequires) {
           drawLabeledLine(page4, {
@@ -2995,7 +2603,6 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
           });
           y4 -= 20; // Increased from 18 for more spacing
         }
-
         // 3. Property Address
         drawLabeledLine(page4, {
           label: "Property Address",
@@ -3010,29 +2617,25 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
           minWidth: 200,
           maxWidth: 400, // Reduced from 450
         });
-
         // Calculate how much space the address actually took
         const addressLines = trust.propertyAddress
           ? wrapText(trust.propertyAddress, font, 400, 12).length
           : 1;
         y4 -= 30 + (addressLines > 1 ? (addressLines - 1) * 12 : 0);
-
         // Check if we need a new page after the address field
         if (y4 < 200) {
           page4 = pdfDoc.addPage([width, height]);
           y4 = height - 60;
-
           // Redraw section header on new page
           page4.drawText(``, {
             x: 50,
             y: y4,
             size: 11,
-            font: boldFont, 
+            font: boldFont,
             color: rgb(0, 0, 0),
           });
           y4 -= 20; // Increased from 18 for more spacing
         }
-
         // 4. Is a transfer to joint names required?
         drawYesNoRow(page4, {
           label: "Transfer to Joint Names",
@@ -3041,7 +2644,6 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
           y: y4,
         });
         y4 -= 25;
-
         // 5. Is a SEV of tenancy required?
         drawYesNoRow(page4, {
           label: "Severance of Tenancy Required",
@@ -3050,7 +2652,6 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
           y: y4,
         });
         y4 -= 25;
-
         // 6. Who is the Occupant/Life Tenant?
         if (
           trust.occupantLifeTenant &&
@@ -3058,7 +2659,6 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
         ) {
           const occupant = trust.occupantLifeTenant;
           let occupantText = [];
-
           if (occupant.client1) occupantText.push("Client 1");
           if (occupant.client2) occupantText.push("Client 2");
           if (occupant.both) occupantText.push("Both");
@@ -3069,7 +2669,6 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
             if (occupant.otherDetails)
               occupantText.push(`- ${occupant.otherDetails}`);
           }
-
           if (occupantText.length > 0) {
             drawLabeledLine(page4, {
               label: "Occupant/Life Tenant",
@@ -3087,9 +2686,7 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
             y4 -= 20; // Increased from 18 for more spacing
           }
         }
-
-        y4 -= 45;
-
+        y4 -= 30;
         // 7. Period of tenancy?
         if (trust.periodOfTenancy) {
           drawLabeledLine(page4, {
@@ -3105,9 +2702,7 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
           });
           y4 -= 25;
         }
-
         y4 -= 0;
-
         // Fixed Term (if period is fixed)
         if (trust.fixedTerm) {
           drawLabeledLine(page4, {
@@ -3115,19 +2710,19 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
             value: trust.fixedTerm || "",
             x: 50,
             y: y4,
-            lineWidth: 200,
-            labelWidth: 110,
+            lineWidth: 350,
+            labelWidth: 100,
+            shouldWrapText: true,
+            lineHeight: 12,
             dynamicWidth: true,
-            minWidth: 100,
-            maxWidth: 250,
+            minWidth: 200,
+            maxWidth: 400,
           });
-          y4 -= 20; // Increased from 18 for more spacing
+          y4 -= 30; // Increased from 18 for more spacing
         }
-
         // 8. Will life tenant end on?
         if (trust.lifeTenantEndsOn) {
           const lifeTenantEndsOn = trust.lifeTenantEndsOn;
-
           if (lifeTenantEndsOn.cohabitation !== undefined) {
             drawYesNoRow(page4, {
               label: "Life Tenant Ends On - Cohabitation",
@@ -3137,7 +2732,6 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
             });
             y4 -= 25;
           }
-
           if (lifeTenantEndsOn.marriage !== undefined) {
             drawYesNoRow(page4, {
               label: "Life Tenant Ends On - Marriage",
@@ -3147,13 +2741,11 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
             });
             y4 -= 25;
           }
-
           // Check if we need a new page before Life Tenant Ends On - Age
           if (y4 < 200) {
             page4 = pdfDoc.addPage([width, height]);
             y4 = height - 60;
           }
-
           if (lifeTenantEndsOn.age !== undefined) {
             drawYesNoRow(page4, {
               label: "Life Tenant Ends On - Age",
@@ -3164,7 +2756,6 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
             y4 -= 25;
           }
         }
-
         // 9. Is this a flexible life interest trust?
         if (trust.flexibleLifeInterestTrust) {
           drawLabeledLine(page4, {
@@ -3181,7 +2772,6 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
           });
           y4 -= 20; // Increased from 18 for more spacing
         }
-
         // 10. Is there a right to substitute?
         if (trust.rightToSubstitute) {
           drawLabeledLine(page4, {
@@ -3197,7 +2787,6 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
           });
           y4 -= 20; // Increased from 18 for more spacing
         }
-
         // 11. In the event of a downsizing what happens to the surplus?
         if (trust.downsizingSurplus) {
           drawLabeledLine(page4, {
@@ -3213,7 +2802,6 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
           });
           y4 -= 20; // Increased from 18 for more spacing
         }
-
         // Downsizing Other details
         if (trust.downsizingOther) {
           // Draw "Downsizing Other" heading
@@ -3224,24 +2812,19 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
             font: boldFont,
             color: rgb(0, 0, 0),
           });
-
           y4 -= 0; // Small space after heading
-
           // Calculate dynamic height for downsizing other box
           const lineHeight = 12;
           const maxWidth = width - 110;
           const padding = 16; // Top and bottom padding
-
           // Calculate text height
           let textHeight = 0;
           const words = trust.downsizingOther.split(" ");
           let currentLine = "";
           let lines = [];
-
           for (const word of words) {
             const testLine = currentLine ? `${currentLine} ${word}` : word;
             const testWidth = font.widthOfTextAtSize(testLine, 9);
-
             if (testWidth <= maxWidth) {
               currentLine = testLine;
             } else {
@@ -3250,13 +2833,10 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
             }
           }
           if (currentLine) lines.push(currentLine);
-
           textHeight = lines.length * lineHeight;
-
           // Dynamic box height based on text content
           const boxHeight = textHeight + padding;
           const boxY = y4 - boxHeight - 10;
-
           // Draw grey rounded box
           drawRoundedRect(
             page4,
@@ -3268,7 +2848,6 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
             rgb(0.94, 0.94, 0.94),
             rgb(0.8, 0.8, 0.8)
           );
-
           // Draw text inside box
           page4.drawText(trust.downsizingOther, {
             x: 52,
@@ -3279,12 +2858,9 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
             maxWidth: width - 110,
             lineHeight: 12,
           });
-
           y4 = boxY - 10;
         }
-
-        y4 -= 25;
-
+        y4 -= 15;
         // 12. What happens when the trust period ends?
         if (trust.trustPeriodEnds) {
           drawLabeledLine(page4, {
@@ -3300,7 +2876,6 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
           });
           y4 -= 20; // Increased from 18 for more spacing
         }
-
         // Trust Period Ends Other details
         if (trust.trustPeriodEndsOther) {
           // Draw "Trust Period Ends Other" heading
@@ -3311,24 +2886,19 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
             font: boldFont,
             color: rgb(0, 0, 0),
           });
-
           y4 -= 0; // Small space after heading
-
           // Calculate dynamic height for trust period ends other box
           const lineHeight = 12;
           const maxWidth = width - 110;
           const padding = 16; // Top and bottom padding
-
           // Calculate text height
           let textHeight = 0;
           const words = trust.trustPeriodEndsOther.split(" ");
           let currentLine = "";
           let lines = [];
-
           for (const word of words) {
             const testLine = currentLine ? `${currentLine} ${word}` : word;
             const testWidth = font.widthOfTextAtSize(testLine, 9);
-
             if (testWidth <= maxWidth) {
               currentLine = testLine;
             } else {
@@ -3337,13 +2907,10 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
             }
           }
           if (currentLine) lines.push(currentLine);
-
           textHeight = lines.length * lineHeight;
-
           // Dynamic box height based on text content
           const boxHeight = textHeight + padding;
           const boxY = y4 - boxHeight - 10;
-
           // Draw grey rounded box
           drawRoundedRect(
             page4,
@@ -3355,7 +2922,6 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
             rgb(0.94, 0.94, 0.94),
             rgb(0.8, 0.8, 0.8)
           );
-
           // Draw text inside box
           page4.drawText(trust.trustPeriodEndsOther, {
             x: 52,
@@ -3366,10 +2932,8 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
             maxWidth: width - 110,
             lineHeight: 12,
           });
-
           y4 = boxY - 10;
         }
-
         y4 -= 20;
       });
     } else {
@@ -3386,7 +2950,6 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
       });
       y4 -= 30;
     }
-
     /**
      * RESIDUE SECTION
      * Order: 8. Residue (after Property Trusts)
@@ -3395,12 +2958,9 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
       page4 = pdfDoc.addPage([width, height]);
       y4 = height - 60;
     }
-
     y4 = drawSectionHeader(page4, "Residue", y4 + 4);
     y4 -= 0;
-
     const residue = getSafeValue(formData, "willInstructions.residue", {});
-
     drawLabeledLine(page4, {
       label: "Spousal Estate Transfer",
       value: residue.spousalEstateTransfer || "",
@@ -3413,7 +2973,6 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
       maxWidth: 350,
     });
     y4 -= 15;
-
     const percentageGroups = residue.percentageGroups || [];
     if (percentageGroups.length > 0) {
       page4.drawText("Percentage Groups:", {
@@ -3424,7 +2983,6 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
         color: rgb(0, 0, 0),
       });
       y4 -= 18;
-
       percentageGroups.forEach((group, idx) => {
         drawLabeledLine(page4, {
           label: `Group ${idx + 1} - Percentage`,
@@ -3438,7 +2996,6 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
           maxWidth: 200,
         });
         y4 -= 20; // Increased from 18 for more spacing
-
         // Display type if available
         if (group.type) {
           const typeText =
@@ -3460,38 +3017,37 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
           });
           y4 -= 20; // Increased from 18 for more spacing
         }
-
         if (group.beneficiaries && group.beneficiaries.length > 0) {
           // Calculate height for beneficiaries section dynamically
           let beneficiariesHeight = 25; // Reduced heading + padding
-          
           group.beneficiaries.forEach((beneficiary) => {
             // Base height for each beneficiary - reduced
             beneficiariesHeight += 35;
-            
             // Add height for title if present - reduced
             if (beneficiary.title) beneficiariesHeight += 15;
-            
             // Add height for name if present - reduced
             if (beneficiary.name || beneficiary.fullName) beneficiariesHeight += 15;
-            
             // Add height for relationship if present - reduced
             if (beneficiary.relationship) beneficiariesHeight += 15;
-            
             // Add height for address if present - reduced calculation
             if (beneficiary.address) {
               beneficiariesHeight += 12; // Address label - reduced
               const lines = wrapText(beneficiary.address, font, width - 220, 9);
               beneficiariesHeight += (lines.length * 10); // Address text lines - reduced
             }
-            
             // Add height for age of vesting if present - reduced
             if (beneficiary.ageOfVesting) beneficiariesHeight += 15;
-            
             // Spacing between beneficiaries - reduced
             beneficiariesHeight += 5;
           });
-
+          // Check if beneficiaries section will overflow current page
+          // Leave 100px margin at bottom for page content
+          if (y4 - beneficiariesHeight < 100) {
+            // Add new page for beneficiaries
+            page4 = pdfDoc.addPage([width, height]);
+            y4 = height - 60; // Reset Y position for new page
+            // Add section header on new page
+          }
           // Draw gray background for beneficiaries section
           drawRoundedRect(
             page4,
@@ -3503,10 +3059,8 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
             rgb(0.94, 0.94, 0.94),
             rgb(0.8, 0.8, 0.8)
           );
-
           // Move inside background with padding
           let beneficiaryY = y4 - 10;
-
           page4.drawText("Beneficiaries:", {
             x: 50,
             y: beneficiaryY,
@@ -3515,9 +3069,24 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
             color: rgb(0, 0, 0),
           });
           beneficiaryY -= 20;
-
           // Display each beneficiary with details on separate lines
+          // Also check for page overflow while drawing individual beneficiaries
           group.beneficiaries.forEach((beneficiary, bIdx) => {
+            // Calculate height needed for current beneficiary
+            let currentBeneficiaryHeight = 18; // Base height for name/relationship row
+            if (beneficiary.title) currentBeneficiaryHeight += 18;
+            if (beneficiary.ageOfVesting) currentBeneficiaryHeight += 18; // Same row as title
+            if (beneficiary.address) {
+              currentBeneficiaryHeight += 25; // Address field with wrapping
+            }
+            currentBeneficiaryHeight += 8; // Spacing between beneficiaries
+            // Check if current beneficiary will overflow page
+            if (beneficiaryY - currentBeneficiaryHeight < 100) {
+              // Add new page and continue beneficiaries there
+              page4 = pdfDoc.addPage([width, height]);
+              y4 = height - 60;
+              beneficiaryY = y4 - 20; // Reset beneficiaryY for new page
+            }
             // Full Name (left) and Relationship (right) in same row
             drawLabeledLine(page4, {
               label: "Full Name",
@@ -3530,7 +3099,6 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
               minWidth: 100,
               maxWidth: 250,
             });
-
             drawLabeledLine(page4, {
               label: "Relationship",
               value: beneficiary.relationship || "",
@@ -3543,7 +3111,6 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
               maxWidth: 200,
             });
             beneficiaryY -= 18;
-
             // Title and Age of Vesting in same row
             drawLabeledLine(page4, {
               label: "Title",
@@ -3556,7 +3123,6 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
               minWidth: 50,
               maxWidth: 150,
             });
-
             if (beneficiary.ageOfVesting) {
               drawLabeledLine(page4, {
                 label: "Age of Vesting",
@@ -3571,7 +3137,6 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
               });
             }
             beneficiaryY -= 18;
-
             // Address field
             if (beneficiary.address) {
               drawLabeledLine(page4, {
@@ -3589,35 +3154,28 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
               });
               beneficiaryY -= 25; // Space for wrapped address text
             }
-
             // Add spacing between beneficiaries
             beneficiaryY -= 8;
           });
-
           y4 = beneficiaryY;
         }
         y4 -= 0;
       });
     }
-
     // Add more spacing before Has Substitutional Provisions to separate from beneficiary section
-    y4 -= 5;
-
     // Add Class Gift/Name Group field with proper text wrapping
-    const classGiftValue = percentageGroups.length > 0 && percentageGroups[0].beneficiaries && percentageGroups[0].beneficiaries.length > 0 
+    const classGiftValue = percentageGroups.length > 0 && percentageGroups[0].beneficiaries && percentageGroups[0].beneficiaries.length > 0
       ? percentageGroups[0].beneficiaries[0].classGift || ""
       : "";
-    
     if (classGiftValue) {
       const classGiftLines = wrapText(classGiftValue, font, 420, 12);
       const classGiftHeight = Math.max(20, classGiftLines.length * 12 + 8);
-      
       drawLabeledLine(page4, {
         label: "Class Gift/Name Group",
         value: classGiftValue,
         x: 50,
         y: y4,
-        lineWidth: 400, // Fixed width to fit within grey box
+        lineWidth: 390, // Fixed width to fit within grey box
         labelWidth: 120,
         dynamicWidth: false, // Disable dynamic width to prevent overflow
         shouldWrapText: true,
@@ -3627,15 +3185,111 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
     } else {
       y4 -= 20; // Default spacing if no content
     }
-
+    // Gift Over Clause (GOC) section - after Class Gift
+    console.log("Residue GOC data:", residue.goc);
+    console.log("Percentage Groups GOC data:", residue.percentageGroups && residue.percentageGroups[0] && residue.percentageGroups[0].goc);
+    console.log("Alternate Groups GOC data:", residue.alternateGroups && residue.alternateGroups[0] && residue.alternateGroups[0].goc);
+    // Check percentageGroups first, then alternateGroups
+    const mainGoc = (residue.percentageGroups && residue.percentageGroups[0] && residue.percentageGroups[0].goc)
+      ? residue.percentageGroups[0].goc
+      : (residue.alternateGroups && residue.alternateGroups[0] && residue.alternateGroups[0].goc)
+        ? residue.alternateGroups[0].goc
+        : {};
+    console.log("mainGoc:", mainGoc);
+    console.log("GOC condition check:", mainGoc.giftOverToChildren !== undefined || mainGoc.accruer !== undefined || mainGoc.otherEntities !== undefined || mainGoc.furtherDetails);
+    console.log("mainGoc.furtherDetails value:", mainGoc.furtherDetails);
+    if (mainGoc.giftOverToChildren !== undefined || mainGoc.accruer !== undefined || mainGoc.otherEntities !== undefined || mainGoc.furtherDetails) {
+      // Add spacing after Class Gift
+      y4 -= 10;
+      // Calculate height for GOC section
+      let gocHeight = 25; // Heading + padding
+      if (mainGoc.giftOverToChildren || mainGoc.accruer || mainGoc.otherEntities) {
+        gocHeight += 20; // Type field
+      }
+      if (mainGoc.furtherDetails !== undefined) {
+        gocHeight += 25; // Further Details field
+      }
+      gocHeight += 10; // Extra spacing
+      // Check if we need a new page before GOC section
+      if (y4 < gocHeight + 100) {
+        page4 = pdfDoc.addPage([width, height]);
+        y4 = height - 60;
+      }
+      // Draw grey background for GOC section
+      drawRoundedRect(
+        page4,
+        40,
+        y4 - gocHeight + 8,
+        width - 60,
+        gocHeight,
+        8,
+        rgb(0.94, 0.94, 0.94),
+        rgb(0.8, 0.8, 0.8)
+      );
+      // Move inside background with padding
+      let gocY = y4 - 10;
+      // GOC Heading
+      page4.drawText("Gift Over Clause (GOC) - if gift fails", {
+        x: 50,
+        y: gocY,
+        size: 11,
+        font: boldFont,
+        color: rgb(0, 0, 0),
+      });
+      gocY -= 20;
+      // GOC Type
+      const gocType = [];
+      if (mainGoc.giftOverToChildren) gocType.push("Gift Over To Children");
+      if (mainGoc.accruer) gocType.push("Accruer");
+      if (mainGoc.otherEntities) gocType.push("Other Entities");
+      if (gocType.length > 0) {
+        drawLabeledLine(page4, {
+          label: "Type",
+          value: gocType.join(", "),
+          x: 50,
+          y: gocY,
+          lineWidth: 300,
+          labelWidth: 50,
+          dynamicWidth: true,
+          minWidth: 200,
+          maxWidth: 400,
+        });
+        gocY -= 20;
+      }
+      y4 -= 50;
+      // GOC Further Details - check both goc.furtherDetails and percentageGroups[0].furtherDetails
+      const furtherDetailsValue = mainGoc.furtherDetails ||
+        (residue.percentageGroups && residue.percentageGroups[0] && residue.percentageGroups[0].furtherDetails) ||
+        (residue.alternateGroups && residue.alternateGroups[0] && residue.alternateGroups[0].furtherDetails);
+      console.log("Further Details Value:", furtherDetailsValue);
+      if (furtherDetailsValue !== undefined) {
+        gocY -= 15; // Add space above Further Details
+        drawLabeledLine(page4, {
+          label: "Further Details",
+          value: furtherDetailsValue || "Not provided",
+          x: 40,
+          y: gocY,
+          lineWidth: 380,
+          labelWidth: 80,
+          shouldWrapText: true,
+          lineHeight: 12,
+          dynamicWidth: true,
+          minWidth: 200,
+          maxWidth: 450,
+        });
+        gocY -= 25; // Extra space for wrapped text
+      }
+      y4 = gocY - 50; // Update y4 to position after GOC section
+    }
+    // Add extra spacing before Has Substitutional Provisions
+    y4 -= 8;
     drawYesNoRow(page4, {
       label: "Has Substitutional Provisions",
       value: residue.hasSubstitutionalProvisions || false,
-      x: 50,
+      x: 40,
       y: y4,
     });
     y4 -= 35;
-
     const alternateGroups = residue.alternateGroups || [];
     if (alternateGroups.length > 0) {
       // Check if we need a new page before alternate groups
@@ -3643,39 +3297,35 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
         page4 = pdfDoc.addPage([width, height]);
         y4 = height - 60;
       }
-
       page4.drawText("Alternate Groups:", {
-        x: 50,
+        x: 40,
         y: y4,
         size: 10,
         font: boldFont,
         color: rgb(0, 0, 0),
       });
       y4 -= 18;
-
       alternateGroups.forEach((group, idx) => {
         // Check if we need a new page before each alternate group
         if (y4 < 300) {
           page4 = pdfDoc.addPage([width, height]);
           y4 = height - 60;
         }
-
         // Draw alternate group header
         page4.drawText(`Alternate Group ${idx + 1}:`, {
-          x: 50,
+          x: 40,
           y: y4,
           size: 10,
           font: boldFont,
           color: rgb(0, 0, 0),
         });
         y4 -= 25; // Increased spacing
-
         // Display percentage
         if (group.percentage) {
           drawLabeledLine(page4, {
             label: "Percentage:",
             value: `${group.percentage}%`,
-            x: 50,
+            x: 40,
             y: y4,
             lineWidth: 150,
             labelWidth: 80,
@@ -3685,7 +3335,6 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
           });
           y4 -= 25; // Increased spacing
         }
-
         // Display type
         if (group.type) {
           const typeText =
@@ -3709,48 +3358,38 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
           });
           y4 -= 25; // Increased spacing
         }
-
         // Display beneficiaries
         if (group.beneficiaries && Array.isArray(group.beneficiaries) && group.beneficiaries.length > 0) {
           // Calculate height for alternate beneficiaries section dynamically (reduced)
           let altBeneficiariesHeight = 20; // Reduced heading + padding
-          
           group.beneficiaries.forEach((beneficiary) => {
             // Add height for title if present (reduced)
             if (beneficiary.title) altBeneficiariesHeight += 18;
-            
             // Add height for name if present (reduced)
             if (beneficiary.name || beneficiary.fullName) altBeneficiariesHeight += 18;
-            
             // Add height for relationship if present (reduced)
             if (beneficiary.relationship) altBeneficiariesHeight += 18;
-            
             // Add height for address if present (reduced)
             if (beneficiary.address) {
               altBeneficiariesHeight += 12; // Reduced address label
               const lines = wrapText(beneficiary.address, font, width - 220, 9);
               altBeneficiariesHeight += lines.length * 12; // Address text lines
             }
-            
             // Reduced spacing between beneficiaries
             altBeneficiariesHeight += 10;
           });
-
           // Add height for Other Entities if it exists (reduced)
           if (group.goc && group.goc.otherEntities !== undefined) {
             altBeneficiariesHeight += 20; // Reduced Other Entities field height
           }
-
           // Add height for Gift Over to Children if it exists (reduced)
           if (group.goc && group.goc.giftOverToChildren !== undefined) {
             altBeneficiariesHeight += 20; // Reduced Gift Over to Children field height
           }
-
           // Add height for Accruer if it exists (reduced)
           if (group.goc && group.goc.accruer !== undefined) {
             altBeneficiariesHeight += 20; // Reduced Accruer field height
           }
-
           // Draw gray background for alternate beneficiaries section
           drawRoundedRect(
             page4,
@@ -3762,10 +3401,8 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
             rgb(0.94, 0.94, 0.94),
             rgb(0.8, 0.8, 0.8)
           );
-
           // Move inside background with reduced padding
           let altBeneficiaryY = y4 - 8; // Reduced padding
-
           drawLabeledLine(page4, {
             label: "Beneficiaries:",
             value: "",
@@ -3780,14 +3417,12 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
             maxWidth: 450,
           });
           altBeneficiaryY -= 20; // Reduced spacing
-
           group.beneficiaries.forEach((beneficiary, bIdx) => {
             // Check if we need a new page before each beneficiary
             if (altBeneficiaryY < 150) {
               page4 = pdfDoc.addPage([width, height]);
               altBeneficiaryY = height - 60;
             }
-
             // Title field
             if (beneficiary.title) {
               drawLabeledLine(page4, {
@@ -3805,7 +3440,6 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
               });
               altBeneficiaryY -= 18; // Reduced spacing
             }
-
             // Name field
             const beneficiaryName = beneficiary.name || beneficiary.fullName || "";
             if (beneficiaryName) {
@@ -3824,7 +3458,6 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
               });
               altBeneficiaryY -= 18; // Reduced spacing
             }
-
             // Relationship field
             if (beneficiary.relationship) {
               drawLabeledLine(page4, {
@@ -3842,7 +3475,6 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
               });
               altBeneficiaryY -= 18; // Reduced spacing
             }
-
             // Address field
             if (beneficiary.address) {
               drawLabeledLine(page4, {
@@ -3860,11 +3492,9 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
               });
               altBeneficiaryY -= 18; // Reduced spacing
             }
-
             // Reduced spacing between beneficiaries
             altBeneficiaryY -= 10;
           });
-
           // Add Other Entities inside the gray background if it exists
           if (group.goc && group.goc.otherEntities !== undefined) {
             drawLabeledLine(page4, {
@@ -3880,7 +3510,6 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
             });
             altBeneficiaryY -= 20; // Reduced spacing
           }
-
           // Add Gift Over to Children inside the gray background if it exists
           if (group.goc && group.goc.giftOverToChildren !== undefined) {
             drawLabeledLine(page4, {
@@ -3896,7 +3525,6 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
             });
             altBeneficiaryY -= 20; // Reduced spacing
           }
-
           // Add Accruer inside the gray background if it exists
           if (group.goc && group.goc.accruer !== undefined) {
             drawLabeledLine(page4, {
@@ -3912,13 +3540,10 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
             });
             altBeneficiaryY -= 20; // Reduced spacing
           }
-
           y4 = altBeneficiaryY;
         }
-
         // Add extra spacing to separate from gray background
         y4 -= 35;
-
         // Display description if available (moved before further details)
         if (group.description) {
           // Check if we need a new page before description
@@ -3941,7 +3566,6 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
           });
           y4 -= 25; // Increased spacing
         }
-
         // Display hasSubstitutionalProvisions
         if (group.hasSubstitutionalProvisions !== undefined) {
           drawLabeledLine(page4, {
@@ -3957,7 +3581,6 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
           });
           y4 -= 50; // Increased spacing to separate from further details
         }
-
         // Display further details (moved to the end - after other entities)
         if (group.furtherDetails) {
           // Check if we need a new page before further details
@@ -3968,7 +3591,7 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
           drawLabeledLine(page4, {
             label: "Further Details:",
             value: group.furtherDetails,
-            x: 50,
+            x: 40,
             y: y4,
             lineWidth: 400,
             labelWidth: 80,
@@ -3980,13 +3603,10 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
           });
           y4 -= 25; // Increased spacing
         }
-
         y4 -= 20; // Extra spacing between alternate groups
       });
     }
-
     y4 -= 20;
-
     /**
      * BUSINESS TRUST SECTION
      * Order: 9. Business Trust (after Residue)
@@ -3995,23 +3615,19 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
       page4 = pdfDoc.addPage([width, height]);
       y4 = height - 60;
     }
-
     y4 = drawSectionHeader(page4, "BUSINESS TRUST", y4 + 4);
     y4 -= 10;
-
     const businessTrusts = getSafeValue(
       formData,
       "willInstructions.businessTrusts",
       [],
     );
-
     if (Array.isArray(businessTrusts) && businessTrusts.length > 0) {
       businessTrusts.forEach((trust, idx) => {
         if (y4 < 250) {
           page4 = pdfDoc.addPage([width, height]);
           y4 = height - 60;
         }
-
         page4.drawText(`Business Trust ${idx + 1}`, {
           x: 50,
           y: y4,
@@ -4020,7 +3636,6 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
           color: rgb(0, 0, 0),
         });
         y4 -= 20; // Increased from 18 for more spacing
-
         drawLabeledLine(page4, {
           label: "Business Name",
           value: trust.businessName || "",
@@ -4033,23 +3648,20 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
           maxWidth: 350,
         });
         y4 -= 20; // Increased from 18 for more spacing
-
-        drawLabeledLine(page4, {
-          label: "Business Type",
-          value: trust.businessType || "",
-          x: 50,
-          y: y4,
-          lineWidth: 300,
-          labelWidth: 90,
-          dynamicWidth: true,
-          minWidth: 150,
-          maxWidth: 350,
-        });
+        // drawLabeledLine(page4, {
+        //   label: "Business Type",
+        //   value: trust.businessType || "",
+        //   x: 50,
+        //   y: y4,
+        //   lineWidth: 300,
+        //   labelWidth: 90,
+        //   dynamicWidth: true,
+        //   minWidth: 150,
+        //   maxWidth: 350,
+        // });
         y4 -= 20; // Increased from 18 for more spacing
-
         // Ownership Details Box
         const ownershipDetails = trust.ownershipDetails || "";
-
         page4.drawText("Ownership Details", {
           x: 50,
           y: y4,
@@ -4057,25 +3669,20 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
           font: boldFont,
           color: rgb(0, 0, 0),
         });
-
         y4 -= 25;
-
         // Calculate dynamic height for Ownership Details box
         const minBoxHeightOD = 50;
         const lineHeightOD = 12;
         const maxWidthOD = width - 110;
-
         // Calculate text height for Ownership Details
         let textHeightOD = 0;
         if (ownershipDetails) {
           const words = ownershipDetails.split(" ");
           let currentLine = "";
           let lines = [];
-
           for (const word of words) {
             const testLine = currentLine ? `${currentLine} ${word}` : word;
             const testWidth = font.widthOfTextAtSize(testLine, 9);
-
             if (testWidth <= maxWidthOD) {
               currentLine = testLine;
             } else {
@@ -4084,13 +3691,10 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
             }
           }
           if (currentLine) lines.push(currentLine);
-
           textHeightOD = lines.length * lineHeightOD;
         }
-
         const boxHeightOD = Math.max(minBoxHeightOD, textHeightOD + 25);
         const boxYOD = y4 - boxHeightOD + 20;
-
         drawRoundedRect(
           page4,
           45,
@@ -4101,7 +3705,6 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
           rgb(0.94, 0.94, 0.94),
           rgb(0.8, 0.8, 0.8)
         );
-
         if (ownershipDetails) {
           page4.drawText(ownershipDetails, {
             x: 52,
@@ -4113,9 +3716,7 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
             lineHeight: 12,
           });
         }
-
         y4 = boxYOD - 20;
-
         if (trust.beneficiaries && trust.beneficiaries.length > 0) {
           // Display each beneficiary with details on separate lines
           page4.drawText("Beneficiaries:", {
@@ -4126,18 +3727,15 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
             color: rgb(0, 0, 0),
           });
           y4 -= 20; // Increased from 18 for more spacing
-
           trust.beneficiaries.forEach((beneficiary, bIndex) => {
             if (y4 < 120) {
               page4 = pdfDoc.addPage([width, height]);
               y4 = height - 60;
             }
-
             // Beneficiary name with number and title
             let beneficiaryText = `${bIndex + 1}. `;
             if (beneficiary.title) beneficiaryText += `${beneficiary.title} `;
             if (beneficiary.name) beneficiaryText += beneficiary.name;
-
             page4.drawText(beneficiaryText, {
               x: 55,
               y: y4,
@@ -4146,7 +3744,6 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
               color: rgb(0, 0, 0),
             });
             y4 -= 14;
-
             // Relationship field
             if (beneficiary.relationship) {
               page4.drawText(`Relationship:`, {
@@ -4165,7 +3762,6 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
               });
               y4 -= 12;
             }
-
             // Class gift/named group field
             if (beneficiary.classGift) {
               page4.drawText(`Class gift/named group:`, {
@@ -4184,7 +3780,6 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
               });
               y4 -= 12;
             }
-
             // Address field
             if (beneficiary.address) {
               page4.drawText(`Address:`, {
@@ -4209,7 +3804,6 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
               });
               y4 -= addressLines.length * 12 + 6;
             }
-
             // Age of Vesting field
             if (beneficiary.ageOfVesting) {
               page4.drawText(`Age of Vesting (if under 18):`, {
@@ -4228,16 +3822,12 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
               });
               y4 -= 12;
             }
-
             y4 -= 8; // Extra space between beneficiaries
           });
-
           y4 -= 10;
         }
-
         // Trust Terms Box
         const trustTermsText = trust.trustTerms || "";
-
         page4.drawText("Trust Terms", {
           x: 50,
           y: y4,
@@ -4245,25 +3835,20 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
           font: boldFont,
           color: rgb(0, 0, 0),
         });
-
         y4 -= 25;
-
         // Calculate dynamic height for Trust Terms box
         const minBoxHeightTT = 50;
         const lineHeightTT = 12;
         const maxWidthTT = width - 110;
-
         // Calculate text height for Trust Terms
         let textHeightTT = 0;
         if (trustTermsText) {
           const words = trustTermsText.split(" ");
           let currentLine = "";
           let lines = [];
-
           for (const word of words) {
             const testLine = currentLine ? `${currentLine} ${word}` : word;
             const testWidth = font.widthOfTextAtSize(testLine, 9);
-
             if (testWidth <= maxWidthTT) {
               currentLine = testLine;
             } else {
@@ -4272,13 +3857,10 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
             }
           }
           if (currentLine) lines.push(currentLine);
-
           textHeightTT = lines.length * lineHeightTT;
         }
-
         const boxHeightTT = Math.max(minBoxHeightTT, textHeightTT + 25);
         const boxYTT = y4 - boxHeightTT + 20;
-
         drawRoundedRect(
           page4,
           45,
@@ -4289,7 +3871,6 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
           rgb(0.94, 0.94, 0.94),
           rgb(0.8, 0.8, 0.8)
         );
-
         if (trustTermsText) {
           page4.drawText(trustTermsText, {
             x: 52,
@@ -4301,9 +3882,7 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
             lineHeight: 12,
           });
         }
-
         y4 = boxYTT - 20;
-
         y4 -= 20;
       });
     } else {
@@ -4320,7 +3899,6 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
       });
       y4 -= 30;
     }
-
     /**
      * TESTAMENTARY CAPACITY SECTION
      * Order: 10. Testamentary Capacity (after Business Trust)
@@ -4329,16 +3907,13 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
       page4 = pdfDoc.addPage([width, height]);
       y4 = height - 60;
     }
-
     y4 = drawSectionHeader(page4, "TESTAMENTARY CAPACITY", y4 + 4);
     y4 -= 0;
-
     const testamentaryCapacity = getSafeValue(
       formData,
       "willInstructions.testamentaryCapacity",
       {},
     );
-
     drawYesNoRow(page4, {
       label: "Does Client have LPAs",
       value:
@@ -4348,7 +3923,6 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
       y: y4,
     });
     y4 -= 25;
-
     drawYesNoRow(page4, {
       label: "Do you have concerns in the respect of capacity, confusion, memory loss?",
       value:
@@ -4358,7 +3932,6 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
       y: y4,
     });
     y4 -= 25;
-
     drawYesNoRow(page4, {
       label: "Are you satisfied that the Clients understand they are giving instructions for their Will?",
       value:
@@ -4368,7 +3941,6 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
       y: y4,
     });
     y4 -= 25;
-
     drawYesNoRow(page4, {
       label: "Are you satisfied that the Clients understand who may have a claim on their estate?",
       value:
@@ -4378,7 +3950,6 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
       y: y4,
     });
     y4 -= 25;
-
     drawYesNoRow(page4, {
       label: "Are you satisfied that the clients aren't being unduly influenced?",
       value:
@@ -4388,7 +3959,6 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
       y: y4,
     });
     y4 -= 25;
-
     drawYesNoRow(page4, {
       label: "Paralegal Certification",
       value: testamentaryCapacity.paralegalCertification || false,
@@ -4396,7 +3966,6 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
       y: y4,
     });
     y4 -= 35;
-
     /**
      * ADDITIONAL INSTRUCTIONS SECTION
      * Order: 11. Additional Instructions (after Testamentary Capacity)
@@ -4405,13 +3974,11 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
       page4 = pdfDoc.addPage([width, height]);
       y4 = height - 60;
     }
-
     const extraInstructions = getSafeValue(
       formData,
       "willInstructions.additionalInstructions",
       "",
     );
-
     page4.drawText("Additional Instructions", {
       x: 50,
       y: y4,
@@ -4419,25 +3986,20 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
       font: boldFont,
       color: rgb(0, 0, 0),
     });
-
     y4 -= 28;
-
     // Calculate dynamic height for Additional Instructions box
     const minBoxHeightAI = 70;
     const lineHeightAI = 12;
     const maxWidthAI = width - 110;
-
     // Calculate text height
     let textHeightAI = 0;
     if (extraInstructions) {
       const words = extraInstructions.split(" ");
       let currentLine = "";
       let lines = [];
-
       for (const word of words) {
         const testLine = currentLine ? `${currentLine} ${word}` : word;
         const testWidth = font.widthOfTextAtSize(testLine, 9);
-
         if (testWidth <= maxWidthAI) {
           currentLine = testLine;
         } else {
@@ -4446,13 +4008,10 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
         }
       }
       if (currentLine) lines.push(currentLine);
-
       textHeightAI = lines.length * lineHeightAI;
     }
-
     const boxHeightAI = Math.max(minBoxHeightAI, textHeightAI + 30);
     const boxYAI = y4 - boxHeightAI + 20;
-
     drawRoundedRect(
       page4,
       45,
@@ -4463,7 +4022,6 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
       rgb(0.94, 0.94, 0.94),
       rgb(0.8, 0.8, 0.8)
     );
-
     if (extraInstructions) {
       page4.drawText(extraInstructions, {
         x: 52,
@@ -4475,31 +4033,24 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
         lineHeight: 12,
       });
     }
-
     y4 = boxYAI - 40;
-
     /**
      * LPA INSTRUCTIONS PAGE
      * Order: 12. LPA Instructions (after Additional Instructions)
      */
     let pageLPA = pdfDoc.addPage([width, height]);
     let yLPA = height - 60;
-
     const lpa = processedData.lpaInstructions || {};
-
     // Draw section header
     yLPA = drawSectionHeader(pageLPA, "LPA INSTRUCTIONS", yLPA + 4);
     yLPA -= 10; // Space after header
-
     drawYesNoRow(pageLPA, {
       label: "Are LPAs required?",
       value: lpa.requireLPAs,
       x: 50,
       y: yLPA,
     });
-
     yLPA -= 28;
-
     // Add the new question about nominating each other as attorney
     if (lpa.requireLPAs === "yes") {
       drawYesNoRow(pageLPA, {
@@ -4508,12 +4059,9 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
         x: 50,
         y: yLPA,
       });
-
       yLPA -= 28;
     }
-
     const lpaC1 = lpa.client1 || {};
-
     pageLPA.drawText("Client 1 LPA", {
       x: 50,
       y: yLPA,
@@ -4521,129 +4069,50 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
       font: boldFont,
       color: rgb(0, 0, 0),
     });
-
     yLPA -= 18;
-
-    // Preferences / Instructions Box for Client 1
-    const preferencesC1 = lpaC1.preferences || "";
-
-    pageLPA.drawText("Preferences / Instructions", {
-      x: 50,
-      y: yLPA,
-      size: 11,
-      font: boldFont,
-      color: rgb(0, 0, 0),
-    });
-
-    yLPA -= 25;
-
-    // Calculate dynamic height for Preferences box
-    const minBoxHeightPrefC1 = 50;
-    const lineHeightPrefC1 = 12;
-    const maxWidthPrefC1 = width - 110;
-
-    // Calculate text height for Preferences
-    let textHeightPrefC1 = 0;
-    if (preferencesC1) {
-      const words = preferencesC1.split(" ");
-      let currentLine = "";
-      let lines = [];
-
-      for (const word of words) {
-        const testLine = currentLine ? `${currentLine} ${word}` : word;
-        const testWidth = font.widthOfTextAtSize(testLine, 9);
-
-        if (testWidth <= maxWidthPrefC1) {
-          currentLine = testLine;
-        } else {
-          if (currentLine) lines.push(currentLine);
-          currentLine = word;
-        }
-      }
-      if (currentLine) lines.push(currentLine);
-
-      textHeightPrefC1 = lines.length * lineHeightPrefC1;
-    }
-
-    const boxHeightPrefC1 = Math.max(minBoxHeightPrefC1, textHeightPrefC1 + 25);
-    const boxYPrefC1 = yLPA - boxHeightPrefC1 + 20;
-
-    drawRoundedRect(
-      pageLPA,
-      45,
-      boxYPrefC1,
-      width - 90,
-      boxHeightPrefC1,
-      8,
-      rgb(0.94, 0.94, 0.94),
-      rgb(0.8, 0.8, 0.8)
-    );
-
-    if (preferencesC1) {
-      pageLPA.drawText(preferencesC1, {
-        x: 52,
-        y: boxYPrefC1 + boxHeightPrefC1 - 26,
-        size: 9,
-        font,
-        color: rgb(0, 0, 0),
-        maxWidth: width - 110,
-        lineHeight: 12,
-      });
-    }
-
-    yLPA = boxYPrefC1 - 20;
-
     drawLabeledLine(pageLPA, {
-      label: "Certificate provider",
+      label: "Is advisor acting as certificate provider?",
       value: lpaC1.certificateProvider,
       x: 50,
       y: yLPA,
       lineWidth: 220,
-      labelWidth: 130,
+      labelWidth: 200,
       dynamicWidth: true,
       minWidth: 150,
       maxWidth: 250,
     });
-
     yLPA -= 18;
-
     drawLabeledLine(pageLPA, {
-      label: "Decision timing",
+      label: "When do you want attorneys to be able to make decisions?",
       value: lpaC1.decisionTiming,
       x: 50,
       y: yLPA,
       lineWidth: 220,
-      labelWidth: 115,
+      labelWidth: 250,
       dynamicWidth: true,
       minWidth: 150,
       maxWidth: 250,
     });
-
     yLPA -= 18;
-
     drawLabeledLine(pageLPA, {
-      label: "Store or register",
+      label: "Do clients want to store or register their LPAs?",
       value: lpaC1.storeOrRegister,
       x: 50,
       y: yLPA,
       lineWidth: 220,
-      labelWidth: 115,
+      labelWidth: 200,
       dynamicWidth: true,
       minWidth: 150,
       maxWidth: 250,
     });
-
     yLPA -= 18; // Reduced from 18
-
     drawYesNoRow(pageLPA, {
       label: "Client 1 aware of registration fee?",
       value: lpaC1.awareOfFee,
       x: 50,
       y: yLPA,
     });
-
     yLPA -= 30;
-
     // Property Attorneys Section for Client 1
     if (lpaC1.propertyAttorneys && lpaC1.propertyAttorneys.length > 0) {
       pageLPA.drawText("Client 1 Property Attorneys", {
@@ -4653,9 +4122,7 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
         font: boldFont,
         color: rgb(0, 0, 0),
       });
-
       yLPA -= 18;
-
       lpaC1.propertyAttorneys.forEach((attorney, idx) => {
         // Property attorney fields in proper format
         drawLabeledLine(pageLPA, {
@@ -4669,9 +4136,7 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
           minWidth: 50,
           maxWidth: 100,
         });
-
         yLPA -= 16;
-
         drawLabeledLine(pageLPA, {
           label: `Name`,
           value: getSafeValue(attorney, "name", ""),
@@ -4683,9 +4148,7 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
           minWidth: 100,
           maxWidth: 250,
         });
-
         yLPA -= 16;
-
         drawLabeledLine(pageLPA, {
           label: `DOB`,
           value: getSafeValue(attorney, "dob", ""),
@@ -4697,9 +4160,7 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
           minWidth: 80,
           maxWidth: 150,
         });
-
         yLPA -= 16;
-
         drawLabeledLine(pageLPA, {
           label: `Address`,
           value: getSafeValue(attorney, "address", ""),
@@ -4713,13 +4174,10 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
           minWidth: 200,
           maxWidth: 400,
         });
-
         yLPA -= 20;
       });
-
       yLPA -= 20;
     }
-
     // Health Attorneys Section for Client 1
     if (lpaC1.healthAttorneys && lpaC1.healthAttorneys.length > 0) {
       pageLPA.drawText("Client 1 Health Attorneys", {
@@ -4729,15 +4187,12 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
         font: boldFont,
         color: rgb(0, 0, 0),
       });
-
       yLPA -= 18;
-
       lpaC1.healthAttorneys.forEach((attorney, idx) => {
         // Check if we need a new page before drawing this attorney
         if (yLPA < 150) {
           pageLPA = pdfDoc.addPage([width, height]);
           yLPA = height - 60;
-
           // Redraw section header on new page
           pageLPA.drawText("Client 1 Health Attorneys (continued)", {
             x: 50,
@@ -4748,7 +4203,6 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
           });
           yLPA -= 18;
         }
-
         // Health attorney fields in proper format
         drawLabeledLine(pageLPA, {
           label: `Title`,
@@ -4761,9 +4215,7 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
           minWidth: 50,
           maxWidth: 100,
         });
-
         yLPA -= 16;
-
         drawLabeledLine(pageLPA, {
           label: `Name`,
           value: getSafeValue(attorney, "name", ""),
@@ -4775,9 +4227,7 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
           minWidth: 100,
           maxWidth: 250,
         });
-
         yLPA -= 16;
-
         drawLabeledLine(pageLPA, {
           label: ` DOB`,
           value: getSafeValue(attorney, "dob", ""),
@@ -4789,9 +4239,7 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
           minWidth: 80,
           maxWidth: 150,
         });
-
         yLPA -= 16;
-
         drawLabeledLine(pageLPA, {
           label: `Address`,
           value: getSafeValue(attorney, "address", ""),
@@ -4805,13 +4253,10 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
           minWidth: 200,
           maxWidth: 400,
         });
-
         yLPA -= 20;
       });
-
       yLPA -= 20;
     }
-
     // Property Replacement Attorneys Section for Client 1
     if (lpaC1.propertyReplacementAttorneys && lpaC1.propertyReplacementAttorneys.length > 0) {
       pageLPA.drawText("Client 1 Property Replacement Attorneys", {
@@ -4821,15 +4266,12 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
         font: boldFont,
         color: rgb(0, 0, 0),
       });
-
       yLPA -= 18;
-
       lpaC1.propertyReplacementAttorneys.forEach((attorney, idx) => {
         // Check if we need a new page before drawing this attorney
         if (yLPA < 150) {
           pageLPA = pdfDoc.addPage([width, height]);
           yLPA = height - 60;
-
           // Redraw section header on new page
           pageLPA.drawText("Client 1 Property Replacement Attorneys (continued)", {
             x: 50,
@@ -4840,7 +4282,6 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
           });
           yLPA -= 18;
         }
-
         // Property replacement attorney fields
         drawLabeledLine(pageLPA, {
           label: `Title`,
@@ -4853,9 +4294,7 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
           minWidth: 50,
           maxWidth: 100,
         });
-
         yLPA -= 16;
-
         drawLabeledLine(pageLPA, {
           label: `Name`,
           value: getSafeValue(attorney, "name", ""),
@@ -4867,9 +4306,7 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
           minWidth: 100,
           maxWidth: 250,
         });
-
         yLPA -= 16;
-
         drawLabeledLine(pageLPA, {
           label: `DOB`,
           value: getSafeValue(attorney, "dob", ""),
@@ -4881,9 +4318,7 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
           minWidth: 80,
           maxWidth: 150,
         });
-
         yLPA -= 16;
-
         drawLabeledLine(pageLPA, {
           label: `Address`,
           value: getSafeValue(attorney, "address", ""),
@@ -4897,13 +4332,10 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
           minWidth: 200,
           maxWidth: 400,
         });
-
         yLPA -= 20;
       });
-
       yLPA -= 20;
     }
-
     // Health Replacement Attorneys Section for Client 1
     if (lpaC1.healthReplacementAttorneys && lpaC1.healthReplacementAttorneys.length > 0) {
       pageLPA.drawText("Client 1 Health Replacement Attorneys", {
@@ -4913,15 +4345,12 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
         font: boldFont,
         color: rgb(0, 0, 0),
       });
-
       yLPA -= 18;
-
       lpaC1.healthReplacementAttorneys.forEach((attorney, idx) => {
         // Check if we need a new page before drawing this attorney
         if (yLPA < 150) {
           pageLPA = pdfDoc.addPage([width, height]);
           yLPA = height - 60;
-
           // Redraw section header on new page
           pageLPA.drawText("Client 1 Health Replacement Attorneys (continued)", {
             x: 50,
@@ -4932,7 +4361,6 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
           });
           yLPA -= 18;
         }
-
         // Health replacement attorney fields
         drawLabeledLine(pageLPA, {
           label: `Title`,
@@ -4945,9 +4373,7 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
           minWidth: 50,
           maxWidth: 100,
         });
-
         yLPA -= 16;
-
         drawLabeledLine(pageLPA, {
           label: `Name`,
           value: getSafeValue(attorney, "name", ""),
@@ -4959,9 +4385,7 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
           minWidth: 100,
           maxWidth: 250,
         });
-
         yLPA -= 16;
-
         drawLabeledLine(pageLPA, {
           label: `DOB`,
           value: getSafeValue(attorney, "dob", ""),
@@ -4973,9 +4397,7 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
           minWidth: 80,
           maxWidth: 150,
         });
-
         yLPA -= 16;
-
         drawLabeledLine(pageLPA, {
           label: `Address`,
           value: getSafeValue(attorney, "address", ""),
@@ -4989,13 +4411,71 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
           minWidth: 200,
           maxWidth: 400,
         });
-
         yLPA -= 20;
       });
-
       yLPA -= 20;
     }
-
+    // Preferences / Instructions Box for Client 1 - moved after Health Replacement Attorneys
+    if (lpaC1.preferences) {
+      yLPA -= 15; // Add spacing before preferences
+      // Check if we need a new page before preferences
+      const requiredHeight = Math.max(50, lpaC1.preferences.split(" ").length * 3) + 50;
+      if (yLPA - requiredHeight < 100) {
+        pageLPA = pdfDoc.addPage([width, height]);
+        yLPA = height - 60;
+      }
+      pageLPA.drawText("Preferences / Instructions", {
+        x: 50,
+        y: yLPA,
+        size: 11,
+        font: boldFont,
+        color: rgb(0, 0, 0),
+      });
+      yLPA -= 25;
+      // Calculate dynamic height for Preferences box
+      const minBoxHeightPrefC1 = 50;
+      const lineHeightPrefC1 = 12;
+      const maxWidthPrefC1 = width - 110;
+      // Calculate text height for Preferences
+      let textHeightPrefC1 = 0;
+      const words = lpaC1.preferences.split(" ");
+      let currentLine = "";
+      let lines = [];
+      for (const word of words) {
+        const testLine = currentLine ? `${currentLine} ${word}` : word;
+        const testWidth = font.widthOfTextAtSize(testLine, 9);
+        if (testWidth <= maxWidthPrefC1) {
+          currentLine = testLine;
+        } else {
+          if (currentLine) lines.push(currentLine);
+          currentLine = word;
+        }
+      }
+      if (currentLine) lines.push(currentLine);
+      textHeightPrefC1 = lines.length * lineHeightPrefC1;
+      const boxHeightPrefC1 = Math.max(minBoxHeightPrefC1, textHeightPrefC1 + 25);
+      const boxYPrefC1 = yLPA - boxHeightPrefC1 + 20;
+      drawRoundedRect(
+        pageLPA,
+        45,
+        boxYPrefC1,
+        width - 90,
+        boxHeightPrefC1,
+        8,
+        rgb(0.94, 0.94, 0.94),
+        rgb(0.8, 0.8, 0.8)
+      );
+      pageLPA.drawText(lpaC1.preferences, {
+        x: 52,
+        y: boxYPrefC1 + boxHeightPrefC1 - 26,
+        size: 9,
+        font,
+        color: rgb(0, 0, 0),
+        maxWidth: width - 110,
+        lineHeight: 12,
+      });
+      yLPA = boxYPrefC1 - 20;
+    }
     // People to Notify Section for Client 1
     if (lpaC1.peopleToNotify && lpaC1.peopleToNotify.length > 0) {
       pageLPA.drawText("Client 1 People to Notify", {
@@ -5005,9 +4485,7 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
         font: boldFont,
         color: rgb(0, 0, 0),
       });
-
       yLPA -= 18;
-
       lpaC1.peopleToNotify.forEach((person, idx) => {
         const personText = `${idx + 1}. ${getSafeValue(
           person,
@@ -5024,13 +4502,10 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
         });
         yLPA -= 14;
       });
-
       yLPA -= 20;
     }
-
     // Client 2 LPA Section
     const lpaC2 = lpa.client2 || {};
-
     if (
       lpaC2.preferences ||
       lpaC2.certificateProvider ||
@@ -5044,145 +4519,55 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
         font: boldFont,
         color: rgb(0, 0, 0),
       });
-
       yLPA -= 18;
-
-      // Preferences / Instructions Box for Client 2
-      const preferencesC2 = lpaC2.preferences || "";
-
-      // Check if we need a new page for Client 2 Preferences box
-      const requiredHeight = preferencesC2 ? Math.max(50, preferencesC2.split(" ").length * 3) + 50 : 50;
-      if (yLPA - requiredHeight < 100) {
-        pageLPA = pdfDoc.addPage([width, height]);
-        yLPA = height - 60;
-      }
-
-      pageLPA.drawText("Preferences / Instructions", {
-        x: 50,
-        y: yLPA,
-        size: 11,
-        font: boldFont,
-        color: rgb(0, 0, 0),
-      });
-
-      yLPA -= 25;
-
-      // Calculate dynamic height for Preferences box
-      const minBoxHeightPrefC2 = 50;
-      const lineHeightPrefC2 = 12;
-      const maxWidthPrefC2 = width - 110;
-
-      // Calculate text height for Preferences
-      let textHeightPrefC2 = 0;
-      if (preferencesC2) {
-        const words = preferencesC2.split(" ");
-        let currentLine = "";
-        let lines = [];
-
-        for (const word of words) {
-          const testLine = currentLine ? `${currentLine} ${word}` : word;
-          const testWidth = font.widthOfTextAtSize(testLine, 9);
-
-          if (testWidth <= maxWidthPrefC2) {
-            currentLine = testLine;
-          } else {
-            if (currentLine) lines.push(currentLine);
-            currentLine = word;
-          }
-        }
-        if (currentLine) lines.push(currentLine);
-
-        textHeightPrefC2 = lines.length * lineHeightPrefC2;
-      }
-
-      const boxHeightPrefC2 = Math.max(
-        minBoxHeightPrefC2,
-        textHeightPrefC2 + 25,
-      );
-      const boxYPrefC2 = yLPA - boxHeightPrefC2 + 20;
-
-      drawRoundedRect(
-        pageLPA,
-        45,
-        boxYPrefC2,
-        width - 90,
-        boxHeightPrefC2,
-        8,
-        rgb(0.94, 0.94, 0.94),
-        rgb(0.8, 0.8, 0.8)
-      );
-
-      if (preferencesC2) {
-        pageLPA.drawText(preferencesC2, {
-          x: 52,
-          y: boxYPrefC2 + boxHeightPrefC2 - 26,
-          size: 9,
-          font,
-          color: rgb(0, 0, 0),
-          maxWidth: width - 110,
-          lineHeight: 12,
-        });
-      }
-
-      yLPA = boxYPrefC2 - 20;
-
       drawLabeledLine(pageLPA, {
-        label: "Certificate provider",
+        label: "Is advisor acting as certificate provider?",
         value: lpaC2.certificateProvider,
         x: 50,
         y: yLPA,
         lineWidth: 220,
-        labelWidth: 130,
+        labelWidth: 200,
         dynamicWidth: true,
         minWidth: 150,
         maxWidth: 250,
       });
-
       yLPA -= 18;
-
       drawLabeledLine(pageLPA, {
-        label: "Decision timing",
+        label: "When do you want attorneys to be able to make decisions?",
         value: lpaC2.decisionTiming,
         x: 50,
         y: yLPA,
         lineWidth: 220,
-        labelWidth: 115,
+        labelWidth: 250,
         dynamicWidth: true,
         minWidth: 150,
         maxWidth: 250,
       });
-
       yLPA -= 18;
-
       drawLabeledLine(pageLPA, {
-        label: "Store or register",
+        label: "Do clients want to store or register their LPAs?",
         value: lpaC2.storeOrRegister,
         x: 50,
         y: yLPA,
         lineWidth: 220,
-        labelWidth: 115,
+        labelWidth: 290,
         dynamicWidth: true,
         minWidth: 150,
         maxWidth: 250,
       });
-
       yLPA -= 18;
-
       drawYesNoRow(pageLPA, {
         label: "Client 2 aware of registration fee?",
         value: lpaC2.awareOfFee,
         x: 50,
         y: yLPA,
       });
-
       yLPA -= 30;
-
       // Check if we need a new page before Client 2 Property Attorneys
       if (yLPA < 200) {
         pageLPA = pdfDoc.addPage([width, height]);
         yLPA = height - 60;
       }
-
       // Property Attorneys Section for Client 2
       if (lpaC2.propertyAttorneys && lpaC2.propertyAttorneys.length > 0) {
         pageLPA.drawText("Client 2 Property Attorneys", {
@@ -5192,9 +4577,7 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
           font: boldFont,
           color: rgb(0, 0, 0),
         });
-
         yLPA -= 18;
-
         lpaC2.propertyAttorneys.forEach((attorney, idx) => {
           // Property attorney fields in proper format
           drawLabeledLine(pageLPA, {
@@ -5208,9 +4591,7 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
             minWidth: 50,
             maxWidth: 100,
           });
-
           yLPA -= 16;
-
           drawLabeledLine(pageLPA, {
             label: `Name`,
             value: getSafeValue(attorney, "name", ""),
@@ -5222,9 +4603,7 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
             minWidth: 100,
             maxWidth: 250,
           });
-
           yLPA -= 16;
-
           drawLabeledLine(pageLPA, {
             label: `DOB`,
             value: getSafeValue(attorney, "dob", ""),
@@ -5236,9 +4615,7 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
             minWidth: 80,
             maxWidth: 150,
           });
-
           yLPA -= 16;
-
           drawLabeledLine(pageLPA, {
             label: `Address`,
             value: getSafeValue(attorney, "address", ""),
@@ -5252,13 +4629,10 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
             minWidth: 200,
             maxWidth: 400,
           });
-
           yLPA -= 20;
         });
-
         yLPA -= 20;
       }
-
       // Health Attorneys Section for Client 2
       if (lpaC2.healthAttorneys && lpaC2.healthAttorneys.length > 0) {
         pageLPA.drawText("Client 2 Health Attorneys", {
@@ -5268,16 +4642,13 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
           font: boldFont,
           color: rgb(0, 0, 0),
         });
-
         yLPA -= 18;
-
         lpaC2.healthAttorneys.forEach((attorney, idx) => {
           // Check if we need a new page before drawing this attorney (more aggressive check)
           if (yLPA < 200) {
             // Increased threshold from 150 to 200
             pageLPA = pdfDoc.addPage([width, height]);
             yLPA = height - 60;
-
             // Redraw section header on new page
             pageLPA.drawText("", {
               x: 50,
@@ -5288,7 +4659,6 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
             });
             yLPA -= 18;
           }
-
           // Health attorney fields in proper format
           drawLabeledLine(pageLPA, {
             label: `Title`,
@@ -5301,9 +4671,7 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
             minWidth: 50,
             maxWidth: 100,
           });
-
           yLPA -= 16;
-
           drawLabeledLine(pageLPA, {
             label: `Name`,
             value: getSafeValue(attorney, "name", ""),
@@ -5315,9 +4683,7 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
             minWidth: 100,
             maxWidth: 250,
           });
-
           yLPA -= 16;
-
           drawLabeledLine(pageLPA, {
             label: `$DOB`,
             value: getSafeValue(attorney, "dob", ""),
@@ -5329,9 +4695,7 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
             minWidth: 80,
             maxWidth: 150,
           });
-
           yLPA -= 16;
-
           drawLabeledLine(pageLPA, {
             label: `Address`,
             value: getSafeValue(attorney, "address", ""),
@@ -5345,18 +4709,15 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
             minWidth: 200,
             maxWidth: 400,
           });
-
           // Calculate how much space the address actually took
           const addressLines = attorney.address
             ? wrapText(attorney.address, font, 400, 12).length
             : 1;
           yLPA -= 20 + (addressLines > 1 ? (addressLines - 1) * 12 : 0);
-
           // Check if we need a new page after the address field
           if (yLPA < 180) {
             pageLPA = pdfDoc.addPage([width, height]);
             yLPA = height - 30;
-
             // Redraw section header on new page
             pageLPA.drawText("Client 2 Health Attorneys (continued)", {
               x: 50,
@@ -5368,194 +4729,227 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
             yLPA -= 18;
           }
         });
-
         yLPA -= 20;
       }
-
-    // Property Replacement Attorneys Section for Client 2
-    if (lpaC2.propertyReplacementAttorneys && lpaC2.propertyReplacementAttorneys.length > 0) {
-      pageLPA.drawText("Client 2 Property Replacement Attorneys", {
-        x: 50,
-        y: yLPA,
-        size: 12,
-        font: boldFont,
-        color: rgb(0, 0, 0),
-      });
-
-      yLPA -= 18;
-
-      lpaC2.propertyReplacementAttorneys.forEach((attorney, idx) => {
-        // Check if we need a new page before drawing this attorney
-        if (yLPA < 150) {
-          pageLPA = pdfDoc.addPage([width, height]);
-          yLPA = height - 60;
-
-          // Redraw section header on new page
-          pageLPA.drawText("Client 2 Property Replacement Attorneys (continued)", {
+      // Property Replacement Attorneys Section for Client 2
+      if (lpaC2.propertyReplacementAttorneys && lpaC2.propertyReplacementAttorneys.length > 0) {
+        pageLPA.drawText("Client 2 Property Replacement Attorneys", {
+          x: 50,
+          y: yLPA,
+          size: 12,
+          font: boldFont,
+          color: rgb(0, 0, 0),
+        });
+        yLPA -= 18;
+        lpaC2.propertyReplacementAttorneys.forEach((attorney, idx) => {
+          // Check if we need a new page before drawing this attorney
+          if (yLPA < 150) {
+            pageLPA = pdfDoc.addPage([width, height]);
+            yLPA = height - 60;
+            // Redraw section header on new page
+            pageLPA.drawText("Client 2 Property Replacement Attorneys (continued)", {
+              x: 50,
+              y: yLPA,
+              size: 12,
+              font: boldFont,
+              color: rgb(0, 0, 0),
+            });
+            yLPA -= 18;
+          }
+          // Property replacement attorney fields
+          drawLabeledLine(pageLPA, {
+            label: `Title`,
+            value: getSafeValue(attorney, "title", ""),
             x: 50,
             y: yLPA,
-            size: 12,
-            font: boldFont,
-            color: rgb(0, 0, 0),
+            lineWidth: 80,
+            labelWidth: 60,
+            dynamicWidth: true,
+            minWidth: 50,
+            maxWidth: 100,
           });
-          yLPA -= 18;
-        }
-
-        // Property replacement attorney fields
-        drawLabeledLine(pageLPA, {
-          label: `Title`,
-          value: getSafeValue(attorney, "title", ""),
-          x: 50,
-          y: yLPA,
-          lineWidth: 80,
-          labelWidth: 60,
-          dynamicWidth: true,
-          minWidth: 50,
-          maxWidth: 100,
-        });
-
-        yLPA -= 16;
-
-        drawLabeledLine(pageLPA, {
-          label: `Name`,
-          value: getSafeValue(attorney, "name", ""),
-          x: 50,
-          y: yLPA,
-          lineWidth: 200,
-          labelWidth: 60,
-          dynamicWidth: true,
-          minWidth: 100,
-          maxWidth: 250,
-        });
-
-        yLPA -= 16;
-
-        drawLabeledLine(pageLPA, {
-          label: `DOB`,
-          value: getSafeValue(attorney, "dob", ""),
-          x: 50,
-          y: yLPA,
-          lineWidth: 120,
-          labelWidth: 60,
-          dynamicWidth: true,
-          minWidth: 80,
-          maxWidth: 150,
-        });
-
-        yLPA -= 16;
-
-        drawLabeledLine(pageLPA, {
-          label: `Address`,
-          value: getSafeValue(attorney, "address", ""),
-          x: 50,
-          y: yLPA,
-          lineWidth: 400,
-          labelWidth: 70,
-          shouldWrapText: true,
-          lineHeight: 12,
-          dynamicWidth: false,
-          minWidth: 200,
-          maxWidth: 400,
-        });
-
-        yLPA -= 20;
-      });
-
-      yLPA -= 20;
-    }
-
-    // Health Replacement Attorneys Section for Client 2
-    if (lpaC2.healthReplacementAttorneys && lpaC2.healthReplacementAttorneys.length > 0) {
-      pageLPA.drawText("Client 2 Health Replacement Attorneys", {
-        x: 50,
-        y: yLPA,
-        size: 12,
-        font: boldFont,
-        color: rgb(0, 0, 0),
-      });
-
-      yLPA -= 18;
-
-      lpaC2.healthReplacementAttorneys.forEach((attorney, idx) => {
-        // Check if we need a new page before drawing this attorney
-        if (yLPA < 150) {
-          pageLPA = pdfDoc.addPage([width, height]);
-          yLPA = height - 60;
-
-          // Redraw section header on new page
-          pageLPA.drawText("Client 2 Health Replacement Attorneys (continued)", {
+          yLPA -= 16;
+          drawLabeledLine(pageLPA, {
+            label: `Name`,
+            value: getSafeValue(attorney, "name", ""),
             x: 50,
             y: yLPA,
-            size: 12,
-            font: boldFont,
-            color: rgb(0, 0, 0),
+            lineWidth: 200,
+            labelWidth: 60,
+            dynamicWidth: true,
+            minWidth: 100,
+            maxWidth: 250,
           });
-          yLPA -= 18;
-        }
-
-        // Health replacement attorney fields
-        drawLabeledLine(pageLPA, {
-          label: `Title`,
-          value: getSafeValue(attorney, "title", ""),
-          x: 50,
-          y: yLPA,
-          lineWidth: 80,
-          labelWidth: 60,
-          dynamicWidth: true,
-          minWidth: 50,
-          maxWidth: 100,
+          yLPA -= 16;
+          drawLabeledLine(pageLPA, {
+            label: `DOB`,
+            value: getSafeValue(attorney, "dob", ""),
+            x: 50,
+            y: yLPA,
+            lineWidth: 120,
+            labelWidth: 60,
+            dynamicWidth: true,
+            minWidth: 80,
+            maxWidth: 150,
+          });
+          yLPA -= 16;
+          drawLabeledLine(pageLPA, {
+            label: `Address`,
+            value: getSafeValue(attorney, "address", ""),
+            x: 50,
+            y: yLPA,
+            lineWidth: 400,
+            labelWidth: 70,
+            shouldWrapText: true,
+            lineHeight: 12,
+            dynamicWidth: false,
+            minWidth: 200,
+            maxWidth: 400,
+          });
+          yLPA -= 20;
         });
-
-        yLPA -= 16;
-
-        drawLabeledLine(pageLPA, {
-          label: `Name`,
-          value: getSafeValue(attorney, "name", ""),
-          x: 50,
-          y: yLPA,
-          lineWidth: 200,
-          labelWidth: 60,
-          dynamicWidth: true,
-          minWidth: 100,
-          maxWidth: 250,
-        });
-
-        yLPA -= 16;
-
-        drawLabeledLine(pageLPA, {
-          label: `DOB`,
-          value: getSafeValue(attorney, "dob", ""),
-          x: 50,
-          y: yLPA,
-          lineWidth: 120,
-          labelWidth: 60,
-          dynamicWidth: true,
-          minWidth: 80,
-          maxWidth: 150,
-        });
-
-        yLPA -= 16;
-
-        drawLabeledLine(pageLPA, {
-          label: `Address`,
-          value: getSafeValue(attorney, "address", ""),
-          x: 50,
-          y: yLPA,
-          lineWidth: 400,
-          labelWidth: 70,
-          shouldWrapText: true,
-          lineHeight: 12,
-          dynamicWidth: false,
-          minWidth: 200,
-          maxWidth: 400,
-        });
-
         yLPA -= 20;
-      });
-
-      yLPA -= 20;
-    }
-
+      }
+      // Health Replacement Attorneys Section for Client 2
+      if (lpaC2.healthReplacementAttorneys && lpaC2.healthReplacementAttorneys.length > 0) {
+        pageLPA.drawText("Client 2 Health Replacement Attorneys", {
+          x: 50,
+          y: yLPA,
+          size: 12,
+          font: boldFont,
+          color: rgb(0, 0, 0),
+        });
+        yLPA -= 18;
+        lpaC2.healthReplacementAttorneys.forEach((attorney, idx) => {
+          // Check if we need a new page before drawing this attorney
+          if (yLPA < 150) {
+            pageLPA = pdfDoc.addPage([width, height]);
+            yLPA = height - 60;
+            // Redraw section header on new page
+            pageLPA.drawText("Client 2 Health Replacement Attorneys (continued)", {
+              x: 50,
+              y: yLPA,
+              size: 12,
+              font: boldFont,
+              color: rgb(0, 0, 0),
+            });
+            yLPA -= 18;
+          }
+          // Health replacement attorney fields
+          drawLabeledLine(pageLPA, {
+            label: `Title`,
+            value: getSafeValue(attorney, "title", ""),
+            x: 50,
+            y: yLPA,
+            lineWidth: 80,
+            labelWidth: 60,
+            dynamicWidth: true,
+            minWidth: 50,
+            maxWidth: 100,
+          });
+          yLPA -= 16;
+          drawLabeledLine(pageLPA, {
+            label: `Name`,
+            value: getSafeValue(attorney, "name", ""),
+            x: 50,
+            y: yLPA,
+            lineWidth: 200,
+            labelWidth: 60,
+            dynamicWidth: true,
+            minWidth: 100,
+            maxWidth: 250,
+          });
+          yLPA -= 16;
+          drawLabeledLine(pageLPA, {
+            label: `DOB`,
+            value: getSafeValue(attorney, "dob", ""),
+            x: 50,
+            y: yLPA,
+            lineWidth: 120,
+            labelWidth: 60,
+            dynamicWidth: true,
+            minWidth: 80,
+            maxWidth: 150,
+          });
+          yLPA -= 16;
+          drawLabeledLine(pageLPA, {
+            label: `Address`,
+            value: getSafeValue(attorney, "address", ""),
+            x: 50,
+            y: yLPA,
+            lineWidth: 400,
+            labelWidth: 70,
+            shouldWrapText: true,
+            lineHeight: 12,
+            dynamicWidth: false,
+            minWidth: 200,
+            maxWidth: 400,
+          });
+          yLPA -= 20;
+        });
+        yLPA -= 20;
+      }
+      // Preferences / Instructions Box for Client 2 - moved after Health Replacement Attorneys
+      if (lpaC2.preferences) {
+        yLPA -= 15; // Add spacing before preferences
+        // Check if we need a new page before preferences
+        const requiredHeight = Math.max(50, lpaC2.preferences.split(" ").length * 3) + 50;
+        if (yLPA - requiredHeight < 100) {
+          pageLPA = pdfDoc.addPage([width, height]);
+          yLPA = height - 60;
+        }
+        pageLPA.drawText("Preferences / Instructions", {
+          x: 50,
+          y: yLPA,
+          size: 11,
+          font: boldFont,
+          color: rgb(0, 0, 0),
+        });
+        yLPA -= 25;
+        // Calculate dynamic height for Preferences box
+        const minBoxHeightPrefC2 = 50;
+        const lineHeightPrefC2 = 12;
+        const maxWidthPrefC2 = width - 110;
+        // Calculate text height for Preferences
+        let textHeightPrefC2 = 0;
+        const words = lpaC2.preferences.split(" ");
+        let currentLine = "";
+        let lines = [];
+        for (const word of words) {
+          const testLine = currentLine ? `${currentLine} ${word}` : word;
+          const testWidth = font.widthOfTextAtSize(testLine, 9);
+          if (testWidth <= maxWidthPrefC2) {
+            currentLine = testLine;
+          } else {
+            if (currentLine) lines.push(currentLine);
+            currentLine = word;
+          }
+        }
+        if (currentLine) lines.push(currentLine);
+        textHeightPrefC2 = lines.length * lineHeightPrefC2;
+        const boxHeightPrefC2 = Math.max(minBoxHeightPrefC2, textHeightPrefC2 + 25);
+        const boxYPrefC2 = yLPA - boxHeightPrefC2 + 20;
+        drawRoundedRect(
+          pageLPA,
+          45,
+          boxYPrefC2,
+          width - 90,
+          boxHeightPrefC2,
+          8,
+          rgb(0.94, 0.94, 0.94),
+          rgb(0.8, 0.8, 0.8)
+        );
+        pageLPA.drawText(lpaC2.preferences, {
+          x: 52,
+          y: boxYPrefC2 + boxHeightPrefC2 - 26,
+          size: 9,
+          font,
+          color: rgb(0, 0, 0),
+          maxWidth: width - 110,
+          lineHeight: 12,
+        });
+        yLPA = boxYPrefC2 - 20;
+      }
       // People to Notify Section for Client 2
       if (lpaC2.peopleToNotify && lpaC2.peopleToNotify.length > 0) {
         pageLPA.drawText("Client 2 People to Notify", {
@@ -5565,9 +4959,7 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
           font: boldFont,
           color: rgb(0, 0, 0),
         });
-
         yLPA -= 18;
-
         lpaC2.peopleToNotify.forEach((person, idx) => {
           const personText = `${idx + 1}. ${getSafeValue(
             person,
@@ -5584,137 +4976,37 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
           });
           yLPA -= 14;
         });
-
         yLPA -= 5;
       }
     }
-
     // Add minimal space after last LPA item
     yLPA -= 2; // Reduced from 5 to 2 for tighter spacing
-
     /**
      * REVIEW PAGE SECTION
      * Adding after attorney section
      */
-    
     // Add space before review section
     yLPA -= 10; // Reduced from 30 to 10 for much tighter spacing
-    
     // Check if we need a new page for review section
     if (yLPA < 200) {
       pageLPA = pdfDoc.addPage([width, height]);
       yLPA = height - 60;
     }
-
     // Draw review section header
     // yLPA = drawSectionHeader(pageLPA, "REVIEW", yLPA); // Commented out heading
     // yLPA -= 5; // Removed space above TERMS text for tighter layout
-
-    // Add TERMS section from first image
-    pageLPA.drawText("TERMS: For drafting Will / Will Trusts / LPA's", {
-      x: 50,
-      y: yLPA,
-      size: 12,
-      font: boldFont,
-      color: rgb(0, 0, 0),
-    });
-    yLPA -= 20;
-
-    const terms = [
-      "• All instructions are taken by a trained and qualified paralegal.",
-      "• The documents are drafted by a team of experienced solicitors and barristers.",
-      "• The documents are checked by a compliance team before being sent to you.",
-      "• The documents are checked by a senior solicitor before being sent to you.",
-      "• The documents are checked by a senior barrister before being sent to you."
-    ];
-
-    terms.forEach((term) => {
-      if (yLPA < 120) {
-        pageLPA = pdfDoc.addPage([width, height]);
-        yLPA = height - 60;
-      }
-      
-      pageLPA.drawText(term, {
-        x: 50,
-        y: yLPA,
-        size: 9,
-        font,
-        color: rgb(0, 0, 0),
-      });
-      yLPA -= 15;
-    });
-
-    // Add extra space before Family Protection Trust
-    yLPA -= 20;
-
-    // Add Family Protection Trust question
-    const familyProtection = processedData.familyProtection || {};
-    drawYesNoRow(pageLPA, {
-      label: "Is the Client taking a Family Protection Trust?",
-      value: familyProtection.requireTrust === "yes",
-      x: 50,
-      y: yLPA,
-    });
-    yLPA -= 30;
-
-    // Add confirmation statements
-    pageLPA.drawText("We confirm the following:", {
-      x: 50,
-      y: yLPA,
-      size: 10,
-      font: boldFont,
-      color: rgb(0, 0, 0),
-    });
-    yLPA -= 18;
-
-    const confirmations = [
-      "The notes of the instructions and advice detailed on the preceding pages is accurate;",
-      "I / We understand that The Planning Bee Ltd will need to instruct a firm who are regulated to perform trust drafting and conveyancing in order to prepare the trust deed and they can instruct any regulate law firm to do so.",
-      "I / We have been provided with the client care document and receipt and I / We are aware of the cancellation terms.",
-      "I / We consent to all my / our relevant personal details contained within this document being processed by The Planning Bee Ltd and shared with the third-party regulated law firm for the purposes of preparing the trust deed and conveyancing work.",
-      "I / We confirm that we have read and understood the contents of this document and confirm that the instructions are accurate to the best of my / our knowledge.",
-      "I / We confirm that we have been given the opportunity to ask questions and that all questions have been answered to our satisfaction.",
-      "I / We confirm that we are signing this document voluntarily and without any undue influence."
-    ];
-
-    confirmations.forEach((confirmation, index) => {
-      const confirmationText = `${index + 1}. ${confirmation}`;
-      const lines = wrapText(confirmationText, font, width - 110, 9);
-      
-      lines.forEach((line) => {
-        if (yLPA < 100) {
-          pageLPA = pdfDoc.addPage([width, height]);
-          yLPA = height - 60;
-        }
-        
-        pageLPA.drawText(line, {
-          x: 65,
-          y: yLPA,
-          size: 9,
-          font,
-          color: rgb(0, 0, 0),
-        });
-        yLPA -= 12;
-      });
-      
-      yLPA -= 5; // Extra space between items
-    });
-
     // Add space before signature lines
     yLPA -= 20;
-
     // Check if we need a new page for signatures
     if (yLPA < 120) {
       pageLPA = pdfDoc.addPage([width, height]);
       yLPA = height - 60;
     }
-
     // Draw signature lines with names from client details
     const clientDetails = processedData.clientDetails || {};
     const client1Name = `${clientDetails.firstName || ""} ${clientDetails.lastName || ""}`.trim() || "Client 1 Name";
     const client2Name = `${clientDetails.firstName2 || ""} ${clientDetails.lastName2 || ""}`.trim() || "Client 2 Name";
     const advisorName = clientDetails.adviserName || "The Planning Bee Advisor";
-
     // Draw Client 1 line
     pageLPA.drawText("Client 1:", {
       x: 50,
@@ -5723,7 +5015,6 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
       font: boldFont,
       color: rgb(0, 0, 0),
     });
-    
     pageLPA.drawText(client1Name, {
       x: 110,
       y: yLPA,
@@ -5731,18 +5022,14 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
       font,
       color: rgb(0, 0, 0),
     });
-    
     pageLPA.drawLine({
       start: { x: 110, y: yLPA - 2 },
       end: { x: 360, y: yLPA - 2 },
       thickness: 0.5,
       color: rgb(0, 0, 0),
     });
-    
     // Removed Date field for Client 1
-
     yLPA -= 25;
-
     // Draw Client 2 line
     pageLPA.drawText("Client 2:", {
       x: 50,
@@ -5751,7 +5038,6 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
       font: boldFont,
       color: rgb(0, 0, 0),
     });
-    
     pageLPA.drawText(client2Name, {
       x: 110,
       y: yLPA,
@@ -5759,18 +5045,14 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
       font,
       color: rgb(0, 0, 0),
     });
-    
     pageLPA.drawLine({
       start: { x: 110, y: yLPA - 2 },
       end: { x: 360, y: yLPA - 2 },
       thickness: 0.5,
       color: rgb(0, 0, 0),
     });
-    
     // Removed Date field for Client 2
-
     yLPA -= 25;
-
     // Draw Advisor line
     pageLPA.drawText("Advisor:", {
       x: 50,
@@ -5779,7 +5061,6 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
       font: boldFont,
       color: rgb(0, 0, 0),
     });
-    
     pageLPA.drawText(advisorName, {
       x: 110,
       y: yLPA,
@@ -5787,40 +5068,31 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
       font,
       color: rgb(0, 0, 0),
     });
-    
     pageLPA.drawLine({
       start: { x: 110, y: yLPA - 2 },
       end: { x: 360, y: yLPA - 2 },
       thickness: 0.5,
       color: rgb(0, 0, 0),
     });
-    
     // Removed Date field for Advisor
-
     // Add more space before Family Protection Trust section
     yLPA -= 40;
-
     /**
      * FAMILY PROTECTION TRUST INSTRUCTIONS SECTION
      * Order: 13. Family Protection Trust Instructions (after LPA Instructions)
      * Continue on the same page as Client 2 health attorneys
      */
-
     // Draw section header for Family Protection on the same page
     yLPA = drawSectionHeader(pageLPA, "FAMILY PROTECTION", yLPA + 4);
     yLPA -= 10; // Space after header
-
     const fp = processedData.familyProtection || {};
-
     drawYesNoRow(pageLPA, {
       label: "Is a Family Protection Trust required?",
       value: fp.requireTrust,
       x: 50,
       y: yLPA,
     });
-
     yLPA -= 20;
-
     drawLabeledLine(pageLPA, {
       label: "Client 1 NI",
       value: fp.client1NI,
@@ -5833,16 +5105,13 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
       maxWidth: 180,
       lineHeight: 12,
     });
-
     // Calculate how much space Client 1 NI actually took
     const client1NILines = fp.client1NI
       ? wrapText(fp.client1NI, font, 160, 12).length
       : 1;
-
     // Move to next row for Client 2
     const client2Y =
       yLPA - (client1NILines > 1 ? (client1NILines - 1) * 14 + 20 : 20);
-
     drawLabeledLine(pageLPA, {
       label: "Client 2 NI",
       value: fp.client2NI,
@@ -5855,58 +5124,45 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
       maxWidth: 180,
       lineHeight: 12,
     });
-
     // Calculate how much space Client 2 NI actually took for proper yLPA adjustment
     const client2NILines = fp.client2NI
       ? wrapText(fp.client2NI, font, 160, 12).length
       : 1;
-
     // Adjust yLPA based on the maximum number of lines used by either field
     const maxLines = Math.max(client1NILines, client2NILines);
     yLPA = client2Y - (maxLines - 1) * 14 - 20;
-
     drawYesNoRow(pageLPA, {
       label: "Clients acting as Trustees?",
       value: fp.clientsAsTrustees,
       x: 50,
       y: yLPA,
     });
-
     yLPA -= 28;
-
     const settlors = fp.settlors || {};
-
     drawYesNoRow(pageLPA, {
       label: "Settlor – Client 1",
       value: settlors.client1,
       x: 50,
       y: yLPA,
     });
-
     yLPA -= 20;
-
     drawYesNoRow(pageLPA, {
       label: "Settlor – Client 2",
       value: settlors.client2,
       x: 50,
       y: yLPA,
     });
-
     yLPA -= 20;
-
     drawYesNoRow(pageLPA, {
       label: "Settlor – Both",
       value: settlors.both,
       x: 50,
       y: yLPA,
     });
-
     yLPA -= 32;
-
     // Trustees Section
     const client1Trustees = fp.client1Trustees || [];
     const client2Trustees = fp.client2Trustees || [];
-
     if (client1Trustees.length > 0 || client2Trustees.length > 0) {
       pageLPA.drawText("Trustees", {
         x: 50,
@@ -5915,9 +5171,7 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
         font: boldFont,
         color: rgb(0, 0, 0),
       });
-
       yLPA -= 12;
-
       // Client 1 Trustees
       if (client1Trustees.length > 0) {
         // Check if we need a new page before drawing Client 1 Trustees
@@ -5925,37 +5179,28 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
           pageLPA = pdfDoc.addPage([width, height]);
           yLPA = height - 60;
         }
-
         // Calculate height for trustees section dynamically
         let trusteesHeight = 15; // Further reduced heading + padding
-        
         client1Trustees.forEach((trustee) => {
           // Base height for each trustee - minimal
           trusteesHeight += 20;
-          
           // Add height for title if present - minimal
           if (trustee.title) trusteesHeight += 10;
-          
           // Add height for name if present - minimal
           if (trustee.fullName) trusteesHeight += 10;
-          
           // Add height for relationship if present - minimal
           if (trustee.relationship) trusteesHeight += 10;
-          
           // Add height for address if present - minimal calculation
           if (trustee.address) {
             trusteesHeight += 8; // Address label - minimal
             const lines = wrapText(trustee.address, font, width - 220, 9);
             trusteesHeight += (lines.length * 6); // Address text lines - minimal
           }
-          
           // Add height for ID Supplied and Email fields (always present now)
           trusteesHeight += 20; // ID Supplied and Email row height
-          
           // Minimal spacing between trustees
           trusteesHeight += 2;
         });
-
         // Draw gray background for trustees section
         drawRoundedRect(
           pageLPA,
@@ -5967,10 +5212,8 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
           rgb(0.94, 0.94, 0.94),
           rgb(0.8, 0.8, 0.8)
         );
-
         // Move inside background with padding
         let trusteeY = yLPA - 8;
-
         pageLPA.drawText("Client 1 Trustees:", {
           x: 50,
           y: trusteeY,
@@ -5979,7 +5222,6 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
           color: rgb(0, 0, 0),
         });
         trusteeY -= 15;
-
         // Display each trustee with details in the requested format
         client1Trustees.forEach((trustee, idx) => {
           // Title (left) and Full Name (right) in same row
@@ -5994,7 +5236,6 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
             minWidth: 50,
             maxWidth: 150,
           });
-
           drawLabeledLine(pageLPA, {
             label: "Full Name",
             value: getSafeValue(trustee, "fullName", ""),
@@ -6007,7 +5248,6 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
             maxWidth: 200,
           });
           trusteeY -= 18;
-
           // Relationship in next row
           drawLabeledLine(pageLPA, {
             label: "Relationship",
@@ -6021,7 +5261,6 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
             maxWidth: 250,
           });
           trusteeY -= 18;
-
           // Address in next row
           if (trustee.address) {
             drawLabeledLine(pageLPA, {
@@ -6039,7 +5278,6 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
             });
             trusteeY -= 25; // Space for wrapped address text
           }
-
           // Add ID Supplied (left) and Email (right) in same row after Address
           drawLabeledLine(pageLPA, {
             label: "ID Supplied",
@@ -6052,7 +5290,6 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
             minWidth: 80,
             maxWidth: 200,
           });
-
           drawLabeledLine(pageLPA, {
             label: "Email",
             value: getSafeValue(trustee, "email", ""),
@@ -6065,16 +5302,12 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
             maxWidth: 250,
           });
           trusteeY -= 20;
-
           // Add spacing between trustees - increased
           trusteeY -= 12;
         });
-
         yLPA = trusteeY;
       }
-
-        yLPA -= 10;
-
+      yLPA -= 10;
       // Client 2 Trustees
       if (client2Trustees.length > 0) {
         // Check if we need a new page before drawing Client 2 Trustees
@@ -6082,37 +5315,28 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
           pageLPA = pdfDoc.addPage([width, height]);
           yLPA = height - 60;
         }
-
         // Calculate height for Client 2 trustees section dynamically
         let trusteesHeight2 = 15; // Further reduced heading + padding
-        
         client2Trustees.forEach((trustee) => {
           // Base height for each trustee - minimal
           trusteesHeight2 += 20;
-          
           // Add height for title if present - minimal
           if (trustee.title) trusteesHeight2 += 10;
-          
           // Add height for name if present - minimal
           if (trustee.fullName) trusteesHeight2 += 10;
-          
           // Add height for relationship if present - minimal
           if (trustee.relationship) trusteesHeight2 += 10;
-          
           // Add height for address if present - minimal calculation
           if (trustee.address) {
             trusteesHeight2 += 8; // Address label - minimal
             const lines = wrapText(trustee.address, font, width - 220, 9);
             trusteesHeight2 += (lines.length * 6); // Address text lines - minimal
           }
-          
           // Add height for ID Supplied and Email fields (always present now)
           trusteesHeight2 += 20; // ID Supplied and Email row height
-          
           // Minimal spacing between trustees
           trusteesHeight2 += 2;
         });
-
         // Draw gray background for Client 2 trustees section
         drawRoundedRect(
           pageLPA,
@@ -6124,10 +5348,8 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
           rgb(0.94, 0.94, 0.94),
           rgb(0.8, 0.8, 0.8)
         );
-
         // Move inside background with padding
         let trusteeY2 = yLPA - 8;
-
         pageLPA.drawText("Client 2 Trustees:", {
           x: 50,
           y: trusteeY2,
@@ -6136,7 +5358,6 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
           color: rgb(0, 0, 0),
         });
         trusteeY2 -= 15;
-
         // Display each trustee with details in the requested format
         client2Trustees.forEach((trustee, idx) => {
           // Title (left) and Full Name (right) in same row
@@ -6151,7 +5372,6 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
             minWidth: 50,
             maxWidth: 150,
           });
-
           drawLabeledLine(pageLPA, {
             label: "Full Name",
             value: getSafeValue(trustee, "fullName", ""),
@@ -6164,7 +5384,6 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
             maxWidth: 200,
           });
           trusteeY2 -= 18;
-
           // Relationship in next row
           drawLabeledLine(pageLPA, {
             label: "Relationship",
@@ -6178,7 +5397,6 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
             maxWidth: 250,
           });
           trusteeY2 -= 18;
-
           // Address in next row
           if (trustee.address) {
             drawLabeledLine(pageLPA, {
@@ -6196,7 +5414,6 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
             });
             trusteeY2 -= 25; // Space for wrapped address text
           }
-
           // Add ID Supplied (left) and Email (right) in same row after Address
           drawLabeledLine(pageLPA, {
             label: "ID Supplied",
@@ -6209,7 +5426,6 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
             minWidth: 80,
             maxWidth: 200,
           });
-
           drawLabeledLine(pageLPA, {
             label: "Email",
             value: getSafeValue(trustee, "email", ""),
@@ -6222,17 +5438,13 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
             maxWidth: 250,
           });
           trusteeY2 -= 20;
-
           // Add spacing between trustees - increased
           trusteeY2 -= 12;
         });
-
         yLPA = trusteeY2;
-
         yLPA -= 20;
       }
     }
-
     drawLabeledLine(pageLPA, {
       label: "Beneficiary Setup",
       value: fp.beneficiarySetup,
@@ -6244,9 +5456,7 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
       minWidth: 150,
       maxWidth: width - 180,
     });
-
     yLPA -= 24;
-
     // Family Protection Beneficiaries Section
     const fpBeneficiaries = fp.beneficiaries || [];
     if (fpBeneficiaries.length > 0) {
@@ -6255,7 +5465,6 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
         pageLPA = pdfDoc.addPage([width, height]);
         yLPA = height - 60;
       }
-
       pageLPA.drawText("Family Protection Beneficiaries", {
         x: 50,
         y: yLPA,
@@ -6263,16 +5472,13 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
         font: boldFont,
         color: rgb(0, 0, 0),
       });
-
       yLPA -= 18;
-
       fpBeneficiaries.forEach((beneficiary, bIndex) => {
         // Check if we need a new page before drawing this beneficiary
         if (yLPA < 150) {
           pageLPA = pdfDoc.addPage([width, height]);
           yLPA = height - 60;
         }
-
         // Beneficiary Title
         drawLabeledLine(pageLPA, {
           label: `Beneficiary ${bIndex + 1} - Title`,
@@ -6285,9 +5491,7 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
           minWidth: 60,
           maxWidth: 120,
         });
-
         yLPA -= 16;
-
         // Beneficiary Full Name
         drawLabeledLine(pageLPA, {
           label: `Beneficiary ${bIndex + 1} - Full Name`,
@@ -6300,9 +5504,7 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
           minWidth: 100,
           maxWidth: 250,
         });
-
         yLPA -= 16;
-
         // Beneficiary Relationship
         drawLabeledLine(pageLPA, {
           label: `Beneficiary ${bIndex + 1} - Relationship`,
@@ -6315,9 +5517,7 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
           minWidth: 80,
           maxWidth: 200,
         });
-
         yLPA -= 16;
-
         // Beneficiary Address
         drawLabeledLine(pageLPA, {
           label: `Beneficiary ${bIndex + 1} - Address`,
@@ -6332,16 +5532,12 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
           shouldWrapText: true,
           lineHeight: 12,
         });
-
         yLPA -= 20;
-
         // Extra space between beneficiaries
         yLPA -= 8;
       });
-
       yLPA -= 10;
     }
-
     // Family Protection Beneficiary Groups Section (with percentages)
     const fpBeneficiaryGroups = fp.beneficiaryGroups || [];
     if (fpBeneficiaryGroups.length > 0) {
@@ -6350,7 +5546,6 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
         pageLPA = pdfDoc.addPage([width, height]);
         yLPA = height - 60;
       }
-
       pageLPA.drawText("Family Protection Beneficiary Groups", {
         x: 50,
         y: yLPA,
@@ -6358,16 +5553,13 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
         font: boldFont,
         color: rgb(0, 0, 0),
       });
-
       yLPA -= 18;
-
       fpBeneficiaryGroups.forEach((group, gIndex) => {
         // Check if we need a new page before drawing this group
         if (yLPA < 150) {
           pageLPA = pdfDoc.addPage([width, height]);
           yLPA = height - 60;
         }
-
         // Group Percentage
         drawLabeledLine(pageLPA, {
           label: `Group ${gIndex + 1} - Percentage`,
@@ -6382,9 +5574,7 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
           minWidth: 60,
           maxWidth: 100,
         });
-
         yLPA -= 16;
-
         // Group Beneficiaries
         const groupBeneficiaries = group.beneficiaries || [];
         if (groupBeneficiaries.length > 0) {
@@ -6394,7 +5584,6 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
               pageLPA = pdfDoc.addPage([width, height]);
               yLPA = height - 60;
             }
-
             // Beneficiary Heading
             pageLPA.drawText(`Beneficiary ${bIndex + 1}`, {
               x: 50,
@@ -6403,9 +5592,7 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
               font: boldFont,
               color: rgb(0, 0, 0),
             });
-
             yLPA -= 14;
-
             // Beneficiary Name
             drawLabeledLine(pageLPA, {
               label: `Name`,
@@ -6418,9 +5605,7 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
               minWidth: 100,
               maxWidth: 250,
             });
-
             yLPA -= 16;
-
             // Beneficiary Relationship
             drawLabeledLine(pageLPA, {
               label: `Relationship`,
@@ -6433,9 +5618,7 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
               minWidth: 80,
               maxWidth: 200,
             });
-
             yLPA -= 16;
-
             // Beneficiary Share
             drawLabeledLine(pageLPA, {
               label: `Percentage`,
@@ -6448,11 +5631,9 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
               minWidth: 60,
               maxWidth: 100,
             });
-
             yLPA -= 20;
           });
         }
-
         // Show Group Type and Further Details once per group (after all beneficiaries)
         // Group Type
         drawLabeledLine(pageLPA, {
@@ -6466,9 +5647,7 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
           minWidth: 80,
           maxWidth: 200,
         });
-
         yLPA -= 16;
-
         // Group Further Details
         const furtherDetails = getSafeValue(group, "furtherDetails", "");
         if (furtherDetails) {
@@ -6483,12 +5662,9 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
             lineHeight: 12,
             dynamicWidth: false,
           });
-
-          yLPA -= 25; // Extra space for wrapped text
+          yLPA -= 15; // Extra space for wrapped text
         }
-
-        yLPA -= 28;
-
+        yLPA -= 38;
         // Gift Over Clause (GOC) section
         const goc = group.goc || {};
         if (goc.giftOverToChildren !== undefined || goc.accruer !== undefined || goc.otherEntities !== undefined || goc.furtherDetails) {
@@ -6500,15 +5676,12 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
             font: boldFont,
             color: rgb(0, 0, 0),
           });
-
           yLPA -= 14;
-
           // GOC Type
           const gocType = [];
           if (goc.giftOverToChildren) gocType.push("Gift Over To Children");
           if (goc.accruer) gocType.push("Accruer");
           if (goc.otherEntities) gocType.push("Other Entities");
-
           if (gocType.length > 0) {
             drawLabeledLine(pageLPA, {
               label: "Type",
@@ -6521,10 +5694,8 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
               minWidth: 200,
               maxWidth: 350,
             });
-
             yLPA -= 16;
           }
-
           // GOC Further Details
           if (goc.furtherDetails) {
             drawLabeledLine(pageLPA, {
@@ -6538,20 +5709,15 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
               lineHeight: 12,
               dynamicWidth: false,
             });
-
             yLPA -= 25; // Extra space for wrapped text
           }
-
           yLPA -= 10; // Extra space after GOC section
         }
-
         // Extra space between groups
         yLPA -= 8;
       });
-
       yLPA -= 5;
     }
-
     // Add the other Family Protection fields that were removed
     drawYesNoRow(pageLPA, {
       label: "Disabled beneficiaries?",
@@ -6559,42 +5725,33 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
       x: 50,
       y: yLPA,
     });
-
     yLPA -= 22;
-
     // Check if we need a new page for remaining Family Protection fields
     if (yLPA < 100) {
       pageLPA = pdfDoc.addPage([width, height]);
       yLPA = height - 60;
     }
-
     drawYesNoRow(pageLPA, {
       label: "Potential claims against the estate?",
       value: fp.potentialClaims,
       x: 50,
       y: yLPA,
     });
-
     yLPA -= 22;
-
     drawYesNoRow(pageLPA, {
       label: "Main residence owned?",
       value: fp.mainResidence,
       x: 50,
       y: yLPA,
     });
-
     yLPA -= 22;
-
     drawYesNoRow(pageLPA, {
       label: "Mortgage or equity release?",
       value: fp.mortgageOrEquity,
       x: 50,
       y: yLPA,
     });
-
     yLPA -= 22;
-
     drawLabeledLine(pageLPA, {
       label: "RX1 / TR1",
       value: fp.rx1OrTr1,
@@ -6606,17 +5763,13 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
       minWidth: 100,
       maxWidth: 200,
     });
-
     yLPA -= 30;
-
     const tr = fp.trustReasons || {};
-
     // Check if we need a new page before drawing Reasons for Trust
     if (yLPA < 150) {
       pageLPA = pdfDoc.addPage([width, height]);
       yLPA = height - 60;
     }
-
     pageLPA.drawText("Reasons for Trust (if applicable)", {
       x: 50,
       y: yLPA,
@@ -6624,9 +5777,7 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
       font: boldFont,
       color: rgb(0, 0, 0),
     });
-
     yLPA -= 18;
-
     const reasonRow = (label, key) => {
       drawYesNoRow(pageLPA, {
         label,
@@ -6636,20 +5787,16 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
       });
       yLPA -= 18;
     };
-
     reasonRow("Reduce probate / delays", "reduceProbate");
     reasonRow("Sideways disinheritance", "sidewaysDisinheritance");
     reasonRow("Divorce claims", "divorceClaims");
     reasonRow("Generational IHT", "generationalIHT");
     reasonRow("Claims against estate", "claimsAgainstEstate");
-
     yLPA -= 0; // Minimal space before Additional Information
-
     /**
      * ADDITIONAL INFORMATION SECTION
      * Moved to appear after Reasons for Trust
      */
-    
     // Draw heading first
     pageLPA.drawText("Additional Information", {
       x: 50,
@@ -6658,13 +5805,10 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
       font: boldFont,
       color: rgb(0, 0, 0),
     });
-
     yLPA -= 15; // Space after heading
-
     // Draw grey box immediately after heading
     const fpBoxHeight = 65; // Increased height
     const fpBoxY = yLPA - fpBoxHeight + 10;
-
     drawRoundedRect(
       pageLPA,
       45,
@@ -6675,7 +5819,6 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
       rgb(0.94, 0.94, 0.94),
       rgb(0.8, 0.8, 0.8)
     );
-
     if (fp.additionalInfo) {
       pageLPA.drawText(fp.additionalInfo, {
         x: 52,
@@ -6687,26 +5830,300 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
         lineHeight: 12,
       });
     }
-
     yLPA = fpBoxY - 10; // Minimal space after section
-
-    /**
-     * PAYMENT TERMS SECTION
-     * Add payment terms data after family protection section
-     */
-    
     // Check if we need a new page before drawing Payment Terms
     if (yLPA < 200) {
       pageLPA = pdfDoc.addPage([width, height]);
       yLPA = height - 60;
     }
-
-    // Draw section header for Payment Terms
-    yLPA = drawSectionHeader(pageLPA, "PAYMENT TERMS", yLPA + 4);
+    // ID Information Section - before Review & Sign
+    if (safeFormData.idInformation) {
+      // Use current page instead of creating a new one
+      // Draw section header
+      yLPA = drawSectionHeader(pageLPA, "ID INFORMATION", yLPA + 4);
+      yLPA -= 10; // Space after header
+      if (safeFormData.idInformation.idDocuments && safeFormData.idInformation.idDocuments.length > 0) {
+        pageLPA.drawText("ID Documents:", {
+          x: 50,
+          y: yLPA,
+          size: 12,
+          font: boldFont,
+          color: rgb(0, 0, 0),
+        });
+        yLPA -= 20;
+        for (const doc of safeFormData.idInformation.idDocuments) {
+          if (!doc) continue;
+          if (!doc.url && !doc.preview && !doc.data) {
+            console.warn("Skipping document - no URL, preview, or data available:", doc.name || "Unnamed document");
+            continue;
+          }
+          if (yLPA < 200) {
+            pageLPA = pdfDoc.addPage([width, height]);
+            yLPA = height - 50;
+          }
+          try {
+            const docUrl = doc.url || doc.preview || doc.data;
+            if (!docUrl) {
+              throw new Error("Document source is missing");
+            }
+            let image;
+            // Handle data URLs
+            if (docUrl.startsWith("data:") || doc.data) {
+              const dataUrl = doc.data || docUrl;
+              const base64Data = dataUrl.split(",")[1];
+              if (!base64Data) {
+                throw new Error("Invalid data URL format");
+              }
+              const imageBytes = Uint8Array.from(atob(base64Data), (c) => c.charCodeAt(0));
+              // Try PNG first, then JPG
+              try {
+                if (doc.type && doc.type.includes("png")) {
+                  image = await pdfDoc.embedPng(imageBytes);
+                } else if (doc.type && (doc.type.includes("jpeg") || doc.type.includes("jpg"))) {
+                  image = await pdfDoc.embedJpg(imageBytes);
+                } else {
+                  try {
+                    image = await pdfDoc.embedPng(imageBytes);
+                  } catch (e) {
+                    image = await pdfDoc.embedJpg(imageBytes);
+                  }
+                }
+              } catch (error) {
+                throw new Error(`Failed to process image: ${error.message}`);
+              }
+            }
+            // Handle regular URLs
+            else if (docUrl) {
+              const response = await fetch(docUrl, {
+                mode: "cors",
+                cache: "no-cache",
+                credentials: "same-origin",
+              });
+              if (!response.ok) {
+                throw new Error(`Failed to fetch image: ${response.status} ${response.statusText}`);
+              }
+              const imageBytes = await response.arrayBuffer();
+              const contentType = response.headers.get("content-type") || doc.type;
+              if (contentType && contentType.includes("png")) {
+                image = await pdfDoc.embedPng(imageBytes);
+              } else if (contentType && (contentType.includes("jpeg") || contentType.includes("jpg"))) {
+                image = await pdfDoc.embedJpg(imageBytes);
+              } else if (docUrl.toLowerCase().endsWith(".png")) {
+                image = await pdfDoc.embedPng(imageBytes);
+              } else if (docUrl.toLowerCase().match(/\.jpe?g$/)) {
+                image = await pdfDoc.embedJpg(imageBytes);
+              } else {
+                try {
+                  image = await pdfDoc.embedPng(imageBytes);
+                } catch (e) {
+                  try {
+                    image = await pdfDoc.embedJpg(imageBytes);
+                  } catch (e2) {
+                    throw new Error("Unsupported image format");
+                  }
+                }
+              }
+            }
+            // Calculate dimensions
+            const aspectRatio = image.width / image.height;
+            const maxWidth = 300;
+            const maxHeight = 300;
+            let imgWidth = maxWidth;
+            let imgHeight = imgWidth / aspectRatio;
+            if (imgHeight > maxHeight) {
+              imgHeight = maxHeight;
+              imgWidth = imgHeight * aspectRatio;
+            }
+            // Check if we need a new page
+            if (yLPA - imgHeight - 40 < 100) {
+              pageLPA = pdfDoc.addPage([width, height]);
+              yLPA = height - 50;
+            }
+            // Draw the image
+            pageLPA.drawImage(image, {
+              x: 50,
+              y: yLPA - imgHeight,
+              width: imgWidth,
+              height: imgHeight,
+            });
+            // Add caption
+            pageLPA.drawText(doc.name || "ID Document", {
+              x: 50,
+              y: yLPA - imgHeight - 15,
+              size: 10,
+              color: rgb(0, 0, 0),
+            });
+            yLPA -= imgHeight + 30;
+          } catch (error) {
+            const errorMsg = `Error loading ${doc.name || "document"}: ${error.message || "Unknown error"}`;
+            console.error(errorMsg, error);
+            const errorLines = [
+              `[X] ${doc.name || "Document"}`,
+              `Type: ${doc.type || "unknown"}`,
+              `Error: ${error.message || "Failed to load image"}`,
+            ];
+            if (doc.url || doc.preview) {
+              const url = (doc.url || doc.preview).substring(0, 50) + ((doc.url || doc.preview).length > 50 ? "..." : "");
+              errorLines.push(`URL: ${url}`);
+            }
+            errorLines.forEach((line) => {
+              if (yLPA < 50) {
+                pageLPA = pdfDoc.addPage([width, height]);
+                yLPA = height - 50;
+              }
+              pageLPA.drawText(line, {
+                x: 50,
+                y: yLPA,
+                size: 9,
+                color: rgb(0.8, 0, 0),
+              });
+              yLPA -= 12;
+            });
+            yLPA -= 30;
+          }
+        }
+        yLPA -= 20;
+      }
+      // Process Supporting Documents
+      if (safeFormData.idInformation.supportingDocuments && safeFormData.idInformation.supportingDocuments.length > 0) {
+        pageLPA.drawText("Supporting Documents:", {
+          x: 50,
+          y: yLPA,
+          size: 12,
+          font: boldFont,
+          color: rgb(0, 0, 0),
+        });
+        yLPA -= 20;
+        for (const doc of safeFormData.idInformation.supportingDocuments) {
+          if (!doc) continue;
+          if (!doc.url && !doc.preview && !doc.data) {
+            console.warn("Skipping supporting document - no URL, preview, or data available:", doc.name || "Unnamed document");
+            continue;
+          }
+          if (yLPA < 200) {
+            pageLPA = pdfDoc.addPage([width, height]);
+            yLPA = height - 50;
+          }
+          try {
+            const docUrl = doc.url || doc.preview || doc.data;
+            let image;
+            if (docUrl.startsWith("data:") || doc.data) {
+              const dataUrl = doc.data || docUrl;
+              const base64Data = dataUrl.split(",")[1];
+              if (!base64Data) {
+                throw new Error("Invalid data URL format");
+              }
+              const imageBytes = Uint8Array.from(atob(base64Data), (c) => c.charCodeAt(0));
+              if (doc.type && doc.type.includes("png")) {
+                image = await pdfDoc.embedPng(imageBytes);
+              } else if (doc.type && (doc.type.includes("jpeg") || doc.type.includes("jpg"))) {
+                image = await pdfDoc.embedJpg(imageBytes);
+              } else {
+                try {
+                  image = await pdfDoc.embedPng(imageBytes);
+                } catch (e) {
+                  image = await pdfDoc.embedJpg(imageBytes);
+                }
+              }
+            } else {
+              const response = await fetch(docUrl);
+              if (!response.ok) throw new Error("Failed to fetch image");
+              const imageBytes = await response.arrayBuffer();
+              const contentType = response.headers.get("content-type") || doc.type;
+              if (contentType && contentType.includes("png")) {
+                image = await pdfDoc.embedPng(imageBytes);
+              } else if (contentType && (contentType.includes("jpeg") || contentType.includes("jpg"))) {
+                image = await pdfDoc.embedJpg(imageBytes);
+              } else {
+                try {
+                  image = await pdfDoc.embedPng(imageBytes);
+                } catch (e) {
+                  image = await pdfDoc.embedJpg(imageBytes);
+                }
+              }
+            }
+            const aspectRatio = image.width / image.height;
+            const maxWidth = 300;
+            const maxHeight = 300;
+            let imgWidth = maxWidth;
+            let imgHeight = imgWidth / aspectRatio;
+            if (imgHeight > maxHeight) {
+              imgHeight = maxHeight;
+              imgWidth = imgHeight * aspectRatio;
+            }
+            if (yLPA - imgHeight - 70 < 100) {
+              pageLPA = pdfDoc.addPage([width, height]);
+              yLPA = height - 50;
+            }
+            pageLPA.drawImage(image, {
+              x: 50,
+              y: yLPA - imgHeight,
+              width: imgWidth,
+              height: imgHeight,
+            });
+            
+            // Only show "Advisor certifies true copy" if advisorCertified is true
+            if (doc.advisorCertified) {
+              pageLPA.drawText("Advisor certifies true copy", {
+                x: 50,
+                y: yLPA - imgHeight - 14,
+                size: 10,
+                font,
+                color: rgb(0, 0, 0),
+              });
+            }
+            
+            pageLPA.drawText(doc.name || "Supporting Document", {
+              x: 50,
+              y: yLPA - imgHeight - (doc.advisorCertified ? 28 : 14),
+              size: 10,
+              color: rgb(0, 0, 0),
+            });
+            yLPA -= imgHeight + (doc.advisorCertified ? 45 : 35);
+          } catch (error) {
+            const errorMsg = `Error loading supporting document ${doc.name || ""}: ${error.message || "Unknown error"}`;
+            console.error(errorMsg, error);
+            const errorLines = doc.advisorCertified ? [
+              "Advisor certifies true copy",
+              `[X] ${doc.name || "Supporting Document"}`,
+              `Type: ${doc.type || "unknown"}`,
+              `Error: ${error.message || "Failed to load image"}`,
+            ] : [
+              `[X] ${doc.name || "Supporting Document"}`,
+              `Type: ${doc.type || "unknown"}`,
+              `Error: ${error.message || "Failed to load image"}`,
+            ];
+            const source = doc.url || doc.preview || doc.data;
+            if (source) {
+              const displaySource = source.substring(0, 50) + (source.length > 50 ? "..." : "");
+              errorLines.push(`Source: ${displaySource}`);
+            }
+            errorLines.forEach((line) => {
+              if (yLPA < 50) {
+                pageLPA = pdfDoc.addPage([width, height]);
+                yLPA = height - 50;
+              }
+              pageLPA.drawText(line, {
+                x: 50,
+                y: yLPA,
+                size: 9,
+                color: rgb(0.8, 0, 0),
+              });
+              yLPA -= 12;
+            });
+            yLPA -= 10;
+          }
+        }
+      }
+    }
+    // Check if we need a new page before Review & Sign section
+    if (yLPA < 200) {
+      pageLPA = pdfDoc.addPage([width, height]);
+      yLPA = height - 60;
+    }
+    yLPA = drawSectionHeader(pageLPA, "Review & Sign", yLPA + 4);
     yLPA -= 10; // Space after header
-
     const reviewSignData = processedData.reviewSignData || {};
-    
     // Fallback: Try to get reviewSignData directly from localStorage if it's empty
     let finalReviewSignData = reviewSignData;
     if (!reviewSignData || Object.keys(reviewSignData).length === 0) {
@@ -6721,18 +6138,7 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
       } catch (error) {
         console.warn("Failed to get reviewSignData from localStorage:", error);
       }
-    }
-    
-    // Debug logging
-    console.log("=== PAYMENT TERMS DEBUG ===");
-    console.log("ReviewSignData:", reviewSignData);
-    console.log("Final ReviewSignData:", finalReviewSignData);
-    console.log("Payment Terms:", finalReviewSignData.paymentTerms);
-    console.log("Total Amount:", finalReviewSignData.totalAmount);
-    console.log("Amount Paid:", finalReviewSignData.amountPaid);
-    console.log("Amount Owing:", finalReviewSignData.amountOwing);
-
-    // Payment Terms textarea - always show if there's any payment data
+    }// Payment Terms textarea - always show if there's any payment data
     if (finalReviewSignData.paymentTerms && finalReviewSignData.paymentTerms.trim() !== "") {
       pageLPA.drawText("Payment Terms:", {
         x: 50,
@@ -6741,13 +6147,10 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
         font: boldFont,
         color: rgb(0, 0, 0),
       });
-
       yLPA -= 26;
-
       // Draw payment terms text in a box with rounded corners
       const paymentTermsBoxHeight = 60;
       const paymentTermsBoxY = yLPA - paymentTermsBoxHeight + 16;
-
       drawRoundedRect(
         pageLPA,
         45,
@@ -6757,9 +6160,7 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
         8,
         rgb(0.94, 0.94, 0.94),
         rgb(0.8, 0.8, 0.8)
-      );
-
-      // Wrap payment terms text if needed
+      );// Wrap payment terms text if needed
       const paymentTermsLines = wrapText(finalReviewSignData.paymentTerms, font, width - 110, 12);
       paymentTermsLines.forEach((line, index) => {
         pageLPA.drawText(line, {
@@ -6770,16 +6171,13 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
           color: rgb(0, 0, 0),
         });
       });
-
       yLPA = paymentTermsBoxY - 20;
     } else {
       // Even if no payment terms text, add some space
       yLPA -= 10;
     }
-
     // Payment amounts grid - always show this section
-    yLPA -= 10;
-
+    yLPA -= 0;
     // Add a sub-header for payment amounts
     pageLPA.drawText("Payment Amounts:", {
       x: 50,
@@ -6788,21 +6186,13 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
       font: boldFont,
       color: rgb(0, 0, 0),
     });
-
     yLPA -= 20;
-
     // Helper function to format currency
     const formatCurrency = (amount) => {
       if (!amount || amount === "0" || amount === "0.00") return "£0.00";
       const numAmount = parseFloat(amount);
       return isNaN(numAmount) ? amount : `£${numAmount.toFixed(2)}`;
     };
-
-    console.log("=== DRAWING PAYMENT AMOUNTS ===");
-    console.log("Total Amount value:", finalReviewSignData.totalAmount);
-    console.log("Amount Paid value:", finalReviewSignData.amountPaid);
-    console.log("Amount Owing value:", finalReviewSignData.amountOwing);
-
     drawLabeledLine(pageLPA, {
       label: "Total Amount",
       value: formatCurrency(finalReviewSignData.totalAmount || "0"),
@@ -6814,9 +6204,7 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
       minWidth: 80,
       maxWidth: 120,
     });
-
     yLPA -= 20;
-
     drawLabeledLine(pageLPA, {
       label: "Amount Paid",
       value: formatCurrency(finalReviewSignData.amountPaid || "0"),
@@ -6828,9 +6216,7 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
       minWidth: 80,
       maxWidth: 120,
     });
-
     yLPA -= 20;
-
     drawLabeledLine(pageLPA, {
       label: "Amount Owing",
       value: formatCurrency(finalReviewSignData.amountOwing || "0"),
@@ -6842,28 +6228,169 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
       minWidth: 80,
       maxWidth: 120,
     });
-
-    yLPA -= 30; // Extra space after payment terms
-
+    yLPA -= 30;
+    pageLPA.drawText("TERMS: For drafting Will / Will Trusts / LPA's", {
+      x: 50,
+      y: yLPA,
+      size: 12,
+      font: boldFont,
+      color: rgb(0, 0, 0),
+    });
+    yLPA -= 20;
+    const terms = [
+      "• All instructions are taken by a trained and qualified paralegal.",
+      "• The documents are drafted by a team of experienced solicitors and barristers.",
+      "• The documents are checked by a compliance team before being sent to you.",
+      "• The documents are checked by a senior solicitor before being sent to you.",
+      "• The documents are checked by a senior barrister before being sent to you."
+    ];
+    terms.forEach((term) => {
+      if (yLPA < 120) {
+        pageLPA = pdfDoc.addPage([width, height]);
+        yLPA = height - 60;
+      }
+      pageLPA.drawText(term, {
+        x: 50,
+        y: yLPA,
+        size: 9,
+        font,
+        color: rgb(0, 0, 0),
+      });
+      yLPA -= 15;
+    });
+    // Add extra space before Family Protection Trust
+    yLPA -= 20;
+    // Add Family Protection Trust question
+    const familyProtection = processedData.familyProtection || {};
+    drawYesNoRow(pageLPA, {
+      label: "Is the Client taking a Family Protection Trust?",
+      value: familyProtection.requireTrust === "yes",
+      x: 50,
+      y: yLPA,
+    });
+    yLPA -= 30;
+    // Add confirmation statements
+    pageLPA.drawText("We confirm the following:", {
+      x: 50,
+      y: yLPA,
+      size: 10,
+      font: boldFont,
+      color: rgb(0, 0, 0),
+    });
+    yLPA -= 18;
+    const confirmations = [
+      "The notes of the instructions and advice detailed on the preceding pages is accurate;",
+      "I / We understand that The Planning Bee Ltd will need to instruct a firm who are regulated to perform trust drafting and conveyancing in order to prepare the trust deed and they can instruct any regulate law firm to do so.",
+      "I / We have been provided with the client care document and receipt and I / We are aware of the cancellation terms.",
+      "I / We consent to all my / our relevant personal details contained within this document being processed by The Planning Bee Ltd and shared with the third-party regulated law firm for the purposes of preparing the trust deed and conveyancing work.",
+      "I / We confirm that we have read and understood the contents of this document and confirm that the instructions are accurate to the best of my / our knowledge.",
+      "I / We confirm that we have been given the opportunity to ask questions and that all questions have been answered to our satisfaction.",
+      "I / We confirm that we are signing this document voluntarily and without any undue influence."
+    ];
+    confirmations.forEach((confirmation, index) => {
+      const confirmationText = `${index + 1}. ${confirmation}`;
+      const lines = wrapText(confirmationText, font, width - 110, 9);
+      lines.forEach((line) => {
+        if (yLPA < 120) {
+          pageLPA = pdfDoc.addPage([width, height]);
+          yLPA = height - 60;
+        }
+        pageLPA.drawText(line, {
+          x: 50,
+          y: yLPA,
+          size: 9,
+          font,
+          color: rgb(0, 0, 0),
+        });
+        yLPA -= 12;
+      });
+      yLPA -= 8; // Space between confirmation points
+    });
+    yLPA -= 20; // Extra space after payment terms
+    // Add Client 1, Client 2, and Advisor signature fields
+    // Use existing clientDetails, client1Name, client2Name, advisorName variables from earlier in the function
+    // Draw Client 1 signature line
+    pageLPA.drawText("Client 1:", {
+      x: 50,
+      y: yLPA,
+      size: 10,
+      font: boldFont,
+      color: rgb(0, 0, 0),
+    });
+    pageLPA.drawText(client1Name, {
+      x: 110,
+      y: yLPA,
+      size: 10,
+      font,
+      color: rgb(0, 0, 0),
+    });
+    pageLPA.drawLine({
+      start: { x: 110, y: yLPA - 2 },
+      end: { x: 360, y: yLPA - 2 },
+      thickness: 0.5,
+      color: rgb(0, 0, 0),
+    });
+    yLPA -= 25;
+    // Draw Client 2 signature line
+    pageLPA.drawText("Client 2:", {
+      x: 50,
+      y: yLPA,
+      size: 10,
+      font: boldFont,
+      color: rgb(0, 0, 0),
+    });
+    pageLPA.drawText(client2Name, {
+      x: 110,
+      y: yLPA,
+      size: 10,
+      font,
+      color: rgb(0, 0, 0),
+    });
+    pageLPA.drawLine({
+      start: { x: 110, y: yLPA - 2 },
+      end: { x: 360, y: yLPA - 2 },
+      thickness: 0.5,
+      color: rgb(0, 0, 0),
+    });
+    yLPA -= 25;
+    // Draw Advisor signature line
+    pageLPA.drawText("Advisor:", {
+      x: 50,
+      y: yLPA,
+      size: 10,
+      font: boldFont,
+      color: rgb(0, 0, 0),
+    });
+    pageLPA.drawText(advisorName, {
+      x: 110,
+      y: yLPA,
+      size: 10,
+      font,
+      color: rgb(0, 0, 0),
+    });
+    pageLPA.drawLine({
+      start: { x: 110, y: yLPA - 2 },
+      end: { x: 360, y: yLPA - 2 },
+      thickness: 0.5,
+      color: rgb(0, 0, 0),
+    });
+    yLPA -= 40; // Extra space before ID information
     /**
      * The existing ID information and signatures handling below is kept as‑is
      * so uploaded documents and signature images still appear at the end of
      * the pack, after the redesigned questionnaire‑style pages.
      */
-
     // Shared Y position for ID pages and signatures pages
     let yPosition = height - 60;
-
-    // ID Information Section
+    /*
+// ID Information Section
     if (safeFormData.idInformation) {
       // Start a fresh page for ID information
       page = pdfDoc.addPage([width, height]);
       yPosition = height - 60;
-
       // Draw section header
       yPosition = drawSectionHeader(page, "ID INFORMATION", yPosition + 4);
       yPosition -= 10; // Space after header
-
       console.log("Full formData received:", formData); // Log the entire formData
       const safeFormData = cleanFormData(formData);
       console.log("Safe formData after cleaning:", safeFormData); // Log cleaned data
@@ -6872,7 +6399,6 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
         "ServicesRequired field:",
         safeFormData.clientDetails?.servicesRequired,
       ); // Log services field specifically
-
       if (
         safeFormData.idInformation.idDocuments &&
         safeFormData.idInformation.idDocuments.length > 0
@@ -6884,11 +6410,9 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
           font: boldFont,
         });
         yPosition -= 20;
-
         for (const doc of safeFormData.idInformation.idDocuments) {
           // Skip if no document object
           if (!doc) continue;
-
           // Log document structure for debugging
           console.log("Processing document:", {
             name: doc.name,
@@ -6897,7 +6421,6 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
             hasPreview: !!doc.preview,
             keys: Object.keys(doc),
           });
-
           // Skip if no URL, preview, or data is available
           if (!doc.url && !doc.preview && !doc.data) {
             console.warn(
@@ -6906,29 +6429,23 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
             );
             continue;
           }
-
           if (yPosition < 200) {
             // Leave more space at bottom for images
             page = pdfDoc.addPage([width, height]);
             yPosition = height - 50;
           }
-
           try {
             console.log(
-              `Processing document: ${doc.name || "Unnamed Document"}, type: ${
-                doc.type
+              `Processing document: ${doc.name || "Unnamed Document"}, type: ${doc.type
               }, URL: ${doc.url || doc.preview || "data-uri"}`,
             );
-
             const docUrl = doc.url || doc.preview || doc.data;
             if (!docUrl) {
               throw new Error(
                 "Document source is missing (no URL, preview, or data)",
               );
             }
-
             let image; // Define image variable at the start of the try block
-
             // Handle data URLs (including the 'data' property from the ID component)
             if (docUrl.startsWith("data:") || doc.data) {
               // If we have a 'data' property, use that as the source
@@ -6945,7 +6462,6 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
               const imageBytes = Uint8Array.from(atob(base64Data), (c) =>
                 c.charCodeAt(0),
               );
-
               // Try PNG first, then JPG if that fails
               try {
                 if (doc.type && doc.type.includes("png")) {
@@ -6977,22 +6493,18 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
                 cache: "no-cache",
                 credentials: "same-origin",
               });
-
               if (!response.ok) {
                 throw new Error(
                   `Failed to fetch image: ${response.status} ${response.statusText}`,
                 );
               }
-
               const imageBytes = await response.arrayBuffer();
-
               // Try to determine image type from response headers if not provided
               const contentType =
                 response.headers.get("content-type") || doc.type;
               console.log(
                 `Content-Type: ${contentType}, Bytes length: ${imageBytes.byteLength}`,
               );
-
               if (contentType && contentType.includes("png")) {
                 image = await pdfDoc.embedPng(imageBytes);
               } else if (
@@ -7019,26 +6531,21 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
                 }
               }
             }
-
             // Calculate dimensions to maintain aspect ratio
             const aspectRatio = image.width / image.height;
             const maxWidth = 300;
             const maxHeight = 300;
-
             let imgWidth = maxWidth;
             let imgHeight = imgWidth / aspectRatio;
-
             if (imgHeight > maxHeight) {
               imgHeight = maxHeight;
               imgWidth = imgHeight * aspectRatio;
             }
-
             // Check if we need a new page for the image
             if (yPosition - imgHeight - 40 < 100) {
               page = pdfDoc.addPage([width, height]);
               yPosition = height - 50;
             }
-
             // Draw the image
             page.drawImage(image, {
               x: leftMargin,
@@ -7046,28 +6553,23 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
               width: imgWidth,
               height: imgHeight,
             });
-
             // Add caption
             page.drawText(doc.name || "ID Document", {
               x: leftMargin,
               y: yPosition - imgHeight - 15,
               size: 10,
             });
-
             yPosition -= imgHeight + 30; // Add space after image
           } catch (error) {
-            const errorMsg = `Error loading ${doc.name || "document"}: ${
-              error.message || "Unknown error"
-            }`;
+            const errorMsg = `Error loading ${doc.name || "document"}: ${error.message || "Unknown error"
+              }`;
             console.error(errorMsg, error);
-
             // Show error message with more details
             const errorLines = [
               `[X] ${doc.name || "Document"}`,
               `Type: ${doc.type || "unknown"}`,
               `Error: ${error.message || "Failed to load image"}`,
             ];
-
             // Add URL if available (truncate if too long)
             if (doc.url || doc.preview) {
               const url =
@@ -7075,14 +6577,12 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
                 ((doc.url || doc.preview).length > 50 ? "..." : "");
               errorLines.push(`URL: ${url}`);
             }
-
             // Draw each line of the error message
             errorLines.forEach((line, index) => {
               if (yPosition < 50) {
                 page = pdfDoc.addPage([width, height]);
                 yPosition = height - 50;
               }
-
               page.drawText(line, {
                 x: leftMargin,
                 y: yPosition,
@@ -7091,13 +6591,11 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
               });
               yPosition -= 12;
             });
-
             yPosition -= 30; // Extra space after error
           }
         }
         yPosition -= 20; // Extra space after section
       }
-
       // Process Supporting Documents
       if (
         safeFormData.idInformation.supportingDocuments &&
@@ -7110,12 +6608,10 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
           font: boldFont,
         });
         yPosition -= 20;
-
         // Process each supporting document
         for (const doc of safeFormData.idInformation.supportingDocuments) {
           // Skip if no document object
           if (!doc) continue;
-
           // Log document structure for debugging
           console.log("Processing supporting document:", {
             name: doc.name,
@@ -7125,7 +6621,6 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
             hasData: !!doc.data,
             keys: Object.keys(doc),
           });
-
           // Skip if no URL, preview, or data is available
           if (!doc.url && !doc.preview && !doc.data) {
             console.warn(
@@ -7134,16 +6629,13 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
             );
             continue;
           }
-
           if (yPosition < 200) {
             page = pdfDoc.addPage([width, height]);
             yPosition = height - 50;
           }
-
           let image;
           try {
             const docUrl = doc.url || doc.preview || doc.data;
-
             // Handle data URLs (including the 'data' property from the ID component)
             if (docUrl.startsWith("data:") || doc.data) {
               const dataUrl = doc.data || docUrl;
@@ -7151,7 +6643,6 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
                 "Processing supporting document data URL:",
                 dataUrl.substring(0, 50) + "...",
               );
-
               const base64Data = dataUrl.split(",")[1];
               if (!base64Data) {
                 throw new Error("Invalid data URL format");
@@ -7159,7 +6650,6 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
               const imageBytes = Uint8Array.from(atob(base64Data), (c) =>
                 c.charCodeAt(0),
               );
-
               // Try PNG first, then JPG if that fails
               if (doc.type && doc.type.includes("png")) {
                 image = await pdfDoc.embedPng(imageBytes);
@@ -7182,11 +6672,9 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
             else {
               const response = await fetch(docUrl);
               if (!response.ok) throw new Error("Failed to fetch image");
-
               const imageBytes = await response.arrayBuffer();
               const contentType =
                 response.headers.get("content-type") || doc.type;
-
               if (contentType && contentType.includes("png")) {
                 image = await pdfDoc.embedPng(imageBytes);
               } else if (
@@ -7204,51 +6692,41 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
                 }
               }
             }
-
             const aspectRatio = image.width / image.height;
             const maxWidth = 300;
             const maxHeight = 300;
-
             let imgWidth = maxWidth;
             let imgHeight = imgWidth / aspectRatio;
-
             if (imgHeight > maxHeight) {
               imgHeight = maxHeight;
               imgWidth = imgHeight * aspectRatio;
             }
-
             if (yPosition - imgHeight - 40 < 100) {
               page = pdfDoc.addPage([width, height]);
               yPosition = height - 50;
             }
-
             page.drawImage(image, {
               x: leftMargin,
               y: yPosition - imgHeight,
               width: imgWidth,
               height: imgHeight,
             });
-
             page.drawText(doc.name || "Supporting Document", {
               x: leftMargin,
               y: yPosition - imgHeight - 15,
               size: 10,
             });
-
             yPosition -= imgHeight + 30;
           } catch (error) {
-            const errorMsg = `Error loading supporting document ${
-              doc.name || ""
-            }: ${error.message || "Unknown error"}`;
+            const errorMsg = `Error loading supporting document ${doc.name || ""
+              }: ${error.message || "Unknown error"}`;
             console.error(errorMsg, error);
-
             // Show error message with more details
             const errorLines = [
               `[X] ${doc.name || "Supporting Document"}`,
               `Type: ${doc.type || "unknown"}`,
               `Error: ${error.message || "Failed to load image"}`,
             ];
-
             // Add source if available (truncate if too long)
             const source = doc.url || doc.preview || doc.data;
             if (source) {
@@ -7256,14 +6734,12 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
                 source.substring(0, 50) + (source.length > 50 ? "..." : "");
               errorLines.push(`Source: ${displaySource}`);
             }
-
             // Draw each line of the error message
             errorLines.forEach((line) => {
               if (yPosition < 50) {
                 page = pdfDoc.addPage([width, height]);
                 yPosition = height - 50;
               }
-
               page.drawText(line, {
                 x: leftMargin,
                 y: yPosition,
@@ -7272,34 +6748,27 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
               });
               yPosition -= 12;
             });
-
             yPosition -= 10; // Extra space after error
           }
         }
       }
     }
-
+    }
+    */
     // Handle signatures if available - placed after ID Information section
     if (safeFormData.signatures) {
-      // Check if we need a new page
-      if (yPosition < 200) {
-        page = pdfDoc.addPage([width, height]);
-        yPosition = height - 50;
-      } else {
-        yPosition -= 30; // Add some space before the signatures section
-      }
-
+      // Always start signatures on a new page so they appear after Review & Sign
+      page = pdfDoc.addPage([width, height]);
+      yPosition = height - 50;
       // Draw section header with consistent styling
       yPosition = drawSectionHeader(page, "CLIENT SIGNATURES", yPosition + 4);
       yPosition -= 10; // Space after header
-
       // Helper function to draw a signature
       const drawSignature = async (signatureData, clientLabel, xPosition) => {
         if (!signatureData || typeof signatureData !== "string") {
           console.log(`No signature data for ${clientLabel}`);
           return;
         }
-
         try {
           // Check if it's a base64 data URL
           if (signatureData.startsWith("data:image/")) {
@@ -7309,30 +6778,25 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
               console.error(`Invalid base64 data in ${clientLabel} signature`);
               return;
             }
-
             // Decode base64 to bytes
             const imageBytes = Uint8Array.from(atob(base64Data), (c) =>
               c.charCodeAt(0),
             );
-
             // Determine image type and embed
             const isPng = signatureData.includes("image/png");
             const signatureImage = isPng
               ? await pdfDoc.embedPng(imageBytes)
               : await pdfDoc.embedJpg(imageBytes);
-
             // Get image dimensions to maintain aspect ratio
             const imageDims = signatureImage.scale(1);
             const signatureWidth = 200;
             const signatureHeight =
               (imageDims.height / imageDims.width) * signatureWidth;
-
             // Check if we need a new page
             if (yPosition - signatureHeight - 40 < 100) {
               page = pdfDoc.addPage([width, height]);
               yPosition = height - 50;
             }
-
             // Add signature label
             page.drawText(`${clientLabel} Signature:`, {
               x: xPosition,
@@ -7340,7 +6804,6 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
               size: 12,
               font: boldFont,
             });
-
             // Draw the signature image
             page.drawImage(signatureImage, {
               x: xPosition,
@@ -7358,13 +6821,11 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
           console.error(`Error drawing ${clientLabel} signature:`, error);
         }
       };
-
       // Draw signatures side by side
       const signatureWidth = 200;
       const signatureSpacing = 50; // Space between signatures
       const totalWidth = signatureWidth * 2 + signatureSpacing;
       const startX = (width - totalWidth) / 2; // Center the signatures
-
       // Draw Client 1 signature on the left
       if (safeFormData.signatures.client1) {
         await drawSignature(
@@ -7373,7 +6834,6 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
           startX,
         );
       }
-
       // Draw Client 2 signature on the right
       if (safeFormData.signatures.client2) {
         await drawSignature(
@@ -7383,21 +6843,17 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
         );
       }
     }
-
     // Page numbering removed as per user request
-
     // Save the PDF with all pages
     const pdfBytes = await pdfDoc.save();
     const blob = new Blob([pdfBytes], { type: "application/pdf" });
     const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
     const filename = `planning-bee-${timestamp}.pdf`;
-
     // Check if we should return the blob instead of downloading
     if (returnBlob) {
       console.log("Returning PDF blob instead of downloading");
       return blob;
     }
-
     // Create a download link and click it programmatically
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement("a");
@@ -7405,15 +6861,12 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
     a.download = filename;
     document.body.appendChild(a);
     a.click();
-
     // Clean up
     window.URL.revokeObjectURL(url);
     document.body.removeChild(a);
-
     console.log(
       `PDF generated successfully with ${pdfDoc.getPageCount()} pages: ${filename}`,
     );
-
     return true;
   } catch (error) {
     console.error("PDF Generation Error:", {
@@ -7426,29 +6879,23 @@ export const generatePDF = async (formData = {}, returnBlob = false) => {
     throw new Error(`Failed to generate PDF: ${error.message}`);
   }
 };
-
 // Remove the generateReceiptPDF function as it's not being used and could cause confusion
-
 const generateReceiptPDF = async (formData = {}) => {
   try {
     if (!formData || typeof formData !== "object") {
       console.warn("No form data provided for receipt generation");
       return false;
     }
-
     // Create a new PDF document for receipt
     const pdfDoc = await PDFDocument.create();
     const page = pdfDoc.addPage([595.28, 841.89]); // A4 size
     const { width, height } = page.getSize();
-
     // Add fonts
     const font = await pdfDoc.embedFont(StandardFonts.TimesRoman);
     const boldFont = await pdfDoc.embedFont(StandardFonts.TimesRomanBold);
-
     let yPosition = height - 50;
     const fontSize = 12;
     const lineHeight = 20;
-
     // Add receipt header
     const drawCenteredText = async (text, y, size = 14, isBold = true) => {
       const textWidth = font.widthOfTextAtSize(text, size);
@@ -7460,15 +6907,12 @@ const generateReceiptPDF = async (formData = {}) => {
         color: rgb(0, 0, 0.8),
       });
     };
-
     // Logo and header
     try {
       await drawCenteredText("The Planning Bee", yPosition, 24);
       yPosition -= 40;
-
       await drawCenteredText("RECEIPT", yPosition, 20);
       yPosition -= 40;
-
       // Receipt details
       const details = [
         { label: "Receipt #", value: `TPB-${Date.now()}` },
@@ -7478,35 +6922,28 @@ const generateReceiptPDF = async (formData = {}) => {
           value: getNestedValue(safeFormData, "client.fullName", "N/A"),
         },
       ];
-
       // Draw receipt details
       for (const detail of details) {
         const labelText = `${detail.label}:`;
         const labelWidth = font.widthOfTextAtSize(labelText, fontSize);
-
         page.drawText(labelText, {
           x: 100,
           y: yPosition,
           size: fontSize,
           font: boldFont,
         });
-
         page.drawText(detail.value, {
           x: 120 + labelWidth,
           y: yPosition,
           size: fontSize,
           font: font,
         });
-
         yPosition -= lineHeight * 1.5;
       }
-
       yPosition -= 30;
-
       // Add thank you message
       await drawCenteredText("Thank you for your business!", yPosition, 14);
       yPosition -= 40;
-
       // Add contact information
       const contactInfo = [
         "The Planning Bee",
@@ -7515,7 +6952,6 @@ const generateReceiptPDF = async (formData = {}) => {
         "contact@planningbee.com",
         "+44 123 456 7890",
       ];
-
       for (const line of contactInfo) {
         await drawCenteredText(line, yPosition, 10, false);
         yPosition -= 15;
@@ -7530,12 +6966,10 @@ const generateReceiptPDF = async (formData = {}) => {
         font: boldFont,
       });
     }
-
     // Save receipt PDF with timestamp
     const pdfBytes = await pdfDoc.save();
     const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
     const blob = new Blob([pdfBytes], { type: "application/pdf" });
-
     if (returnBlob) {
       return blob;
     } else {
@@ -7548,6 +6982,233 @@ const generateReceiptPDF = async (formData = {}) => {
       stack: error.stack,
     });
     throw new Error(`Failed to generate receipt PDF: ${error.message}`);
+  }
+};
+
+// Generate Terms and Conditions PDF with signatures
+export const generateTermsAndConditionsPDF = async (formData = {}, returnBlob = false) => {
+  console.log("=== TERMS & CONDITIONS PDF GENERATION STARTED ===");
+  
+  try {
+    // Create a new PDF document with same layout as main PDF
+    const pdfDoc = await PDFDocument.create();
+    const page = pdfDoc.addPage([595.28, 841.89]); // A4 size
+    const { width, height } = page.getSize();
+    
+    // Add fonts (same as main PDF)
+    const font = await pdfDoc.embedFont(StandardFonts.TimesRoman);
+    const boldFont = await pdfDoc.embedFont(StandardFonts.TimesRomanBold);
+    
+    let yPosition = height - 50;
+    const fontSize = 12;
+    const lineHeight = 20;
+    const margin = 50;
+
+    // Helper function to draw consistent section headers (same as main PDF)
+    const drawSectionHeader = (page, title, yPos) => {
+      const bandHeight = 26;
+      const y = yPos - bandHeight;
+      // Draw the dark background band
+      page.drawRectangle({
+        x: 0,
+        y: y,
+        width,
+        height: bandHeight,
+        color: rgb(0.1, 0.1, 0.11),
+      });
+      // Draw the title text
+      page.drawText(title.toUpperCase(), {
+        x: 50,
+        y: y + 6, // Vertically center in the band
+        size: 12,
+        font: boldFont,
+        color: rgb(1, 1, 1), // White text
+      });
+      return y - 35; // Return y position for content below the header with more space
+    };
+
+    // Helper function to draw a signature (same as main PDF)
+    const drawSignature = async (signatureData, clientLabel, xPosition) => {
+      if (!signatureData || typeof signatureData !== "string") {
+        console.log(`No signature data for ${clientLabel}`);
+        return;
+      }
+      try {
+        // Check if it's a base64 data URL
+        if (signatureData.startsWith("data:image/")) {
+          console.log(`Processing ${clientLabel} signature`);
+          const base64Data = signatureData.split(",")[1];
+          if (!base64Data) {
+            console.error(`Invalid base64 data in ${clientLabel} signature`);
+            return;
+          }
+          // Decode base64 to bytes
+          const imageBytes = Uint8Array.from(atob(base64Data), (c) =>
+            c.charCodeAt(0),
+          );
+          // Determine image type and embed
+          const isPng = signatureData.includes("image/png");
+          const signatureImage = isPng
+            ? await pdfDoc.embedPng(imageBytes)
+            : await pdfDoc.embedJpg(imageBytes);
+          // Get image dimensions to maintain aspect ratio
+          const imageDims = signatureImage.scale(1);
+          const signatureWidth = 200;
+          const signatureHeight =
+            (imageDims.height / imageDims.width) * signatureWidth;
+          
+          // Add signature label
+          page.drawText(`${clientLabel} Signature:`, {
+            x: xPosition,
+            y: yPosition,
+            size: 12,
+            font: boldFont,
+          });
+          // Draw the signature image
+          page.drawImage(signatureImage, {
+            x: xPosition,
+            y: yPosition - 20 - signatureHeight, // Position below the label
+            width: signatureWidth,
+            height: signatureHeight,
+          });
+          console.log(`${clientLabel} signature drawn successfully`);
+        } else {
+          console.log(
+            `${clientLabel} signature data does not start with data:image/`,
+          );
+        }
+      } catch (error) {
+        console.error(`Error drawing ${clientLabel} signature:`, error);
+      }
+    };
+
+    // Title - Centered
+    const titleText = "The Planning Bee";
+    const titleWidth = boldFont.widthOfTextAtSize(titleText, 20);
+    page.drawText(titleText, {
+      x: (width - titleWidth) / 2,
+      y: yPosition,
+      size: 20,
+      font: boldFont,
+      color: rgb(0, 0, 0.8),
+    });
+    yPosition -= 30;
+
+    // Terms & Conditions Section Header
+    yPosition = drawSectionHeader(page, "TERMS & CONDITIONS", yPosition + 4);
+    yPosition -= 10;
+
+    // Date and Client Information
+    page.drawText(`Date: ${new Date().toLocaleDateString()}`, {
+      x: margin,
+      y: yPosition,
+      size: fontSize,
+      font,
+    });
+    yPosition -= lineHeight;
+
+    const clientName = getNestedValue(formData, "clientDetails.fullName", "Client");
+    page.drawText(`Client: ${clientName}`, {
+      x: margin,
+      y: yPosition,
+      size: fontSize,
+      font,
+    });
+    yPosition -= lineHeight * 2;
+
+    // Terms and Conditions Content
+    const termsPoints = [
+      "The information recorded in this form is my/our instruction(s) and I/we know of no reason why my/our document(s) should not be prepared in this way.",
+      "I understand that The Planning Bee Ltd may use this information in line with its normal marketing activities as governed by GDPR.",
+      "I confirm and understand that The Planning Bee Ltd are not responsible for ensuring original Wills and Lasting Powers of Attorney are signed by client.",
+      "I agree for my draft documents to be sent by email.",
+      "I understand my draft documents will be sent to me within 21 days.",
+      "The Client agrees that they fully understood the products they are taking out and were under no pressure to do so.",
+      "The Client agrees that they can cancel at any time, if they cancel within 14 days they will receive a full refund. They can cancel by emailing support@theplanningbee.co.uk.",
+      "The Client agrees it is their responsibility to ensure that the spelling of all names, addresses and dates of births are correct on the draft documents.",
+      "The Client agrees to the Terms & Conditions and have been left with a copy of such."
+    ];
+
+    for (const point of termsPoints) {
+      // Word wrap for long text
+      const words = point.split(' ');
+      let line = '';
+      for (const word of words) {
+        const testLine = line + word + ' ';
+        const testWidth = font.widthOfTextAtSize(testLine, fontSize);
+        if (testWidth > (width - 2 * margin) && line !== '') {
+          page.drawText(line, {
+            x: margin + 10,
+            y: yPosition,
+            size: fontSize,
+            font,
+          });
+          line = word + ' ';
+          yPosition -= lineHeight;
+        } else {
+          line = testLine;
+        }
+      }
+      page.drawText(line, {
+        x: margin + 10,
+        y: yPosition,
+        size: fontSize,
+        font,
+      });
+      yPosition -= lineHeight * 1.5;
+      
+      if (yPosition < 150) {
+        // Add new page if needed
+        const newPage = pdfDoc.addPage([595.28, 841.89]);
+        yPosition = newPage.getSize().height - 50;
+      }
+    }
+
+    yPosition -= 10;
+
+    // Signatures Section Header
+    yPosition = drawSectionHeader(page, "CLIENT SIGNATURES", yPosition + 4);
+    yPosition -= 10;
+
+    // Draw signatures side by side (same as main PDF)
+    const signatureWidth = 200;
+    const signatureSpacing = 50; // Space between signatures
+    const totalWidth = signatureWidth * 2 + signatureSpacing;
+    const startX = (width - totalWidth) / 2; // Center the signatures
+
+    // Draw Client 1 signature on the left
+    if (formData.signatures?.client1) {
+      await drawSignature(
+        formData.signatures.client1,
+        "Client 1",
+        startX,
+      );
+    }
+
+    // Draw Client 2 signature on the right
+    if (formData.signatures?.client2) {
+      await drawSignature(
+        formData.signatures.client2,
+        "Client 2",
+        startX + signatureWidth + signatureSpacing,
+      );
+    }
+
+    // Save PDF
+    const pdfBytes = await pdfDoc.save();
+    const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
+    const blob = new Blob([pdfBytes], { type: "application/pdf" });
+    
+    if (returnBlob) {
+      return blob;
+    } else {
+      const { saveAs } = await import('file-saver');
+      saveAs(blob, `terms-and-conditions-${timestamp}.pdf`);
+      return true;
+    }
+  } catch (error) {
+    console.error("Error generating terms & conditions PDF:", error);
+    throw new Error(`Failed to generate terms & conditions PDF: ${error.message}`);
   }
 };
 

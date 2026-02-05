@@ -11,6 +11,7 @@ export const initialPropertyTrust = {
     other: false,
     otherName: "",
     otherDetails: "",
+    selectedPerson: "", // For tracking selected person from dropdown
   },
   periodOfTenancy: "", // "life" or "fixed"
   fixedTerm: "",

@@ -270,7 +270,7 @@ const FloatingBubbles = () => {
                 </p>
               </div>
               
-              <div className="border-2 border-dashed border-gray-300 rounded-lg h-64 bg-white overflow-hidden relative">
+              <div className="border-2 border-dashed border-gray-300 rounded-lg h-48 md:h-64 bg-white overflow-hidden relative">
                 <canvas
                   ref={canvasRef}
                   width={600}
@@ -299,26 +299,26 @@ const FloatingBubbles = () => {
                 )}
               </div>
               
-              <div className="mt-6 flex justify-between items-center">
+              <div className="mt-6 flex flex-col md:flex-row md:justify-between gap-3">
                 <button
                   onClick={clearSignature}
-                  className="flex items-center px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors"
+                  className="w-full md:w-auto flex items-center justify-center px-3 md:px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors whitespace-nowrap"
                 >
                   <RefreshCw className="h-5 w-5 mr-2" />
                   Clear Signature
                 </button>
                 
-                <div className="flex items-center space-x-3">
+                <div className="flex flex-col md:flex-row gap-3">
                   <button
                     onClick={() => handleCloseModal()}
-                    className="px-6 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors disabled:opacity-50"
+                    className="flex-1 px-3 md:px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors disabled:opacity-50 whitespace-nowrap"
                     disabled={isSaving}
                   >
                     {isSaving ? 'Saving...' : 'Cancel'}
                   </button>
                   <button
                     onClick={handleSignatureSave}
-                    className={`px-6 py-2 rounded-lg shadow-md focus:outline-none focus:ring-2 focus:ring-offset-2 transition-colors flex items-center ${
+                    className={`flex-1 px-3 md:px-4 py-2 rounded-lg shadow-md focus:outline-none focus:ring-2 focus:ring-offset-2 transition-colors flex items-center justify-center whitespace-nowrap ${
                       signature && !isSaving
                         ? 'bg-green-600 hover:bg-green-700 text-white focus:ring-green-500'
                         : 'bg-gray-300 text-gray-500 cursor-not-allowed'
@@ -349,5 +349,4 @@ const FloatingBubbles = () => {
     </div>
   );
 };
-
 export default FloatingBubbles;

@@ -33,6 +33,7 @@ const MainReview = () => {
   const navigate = useNavigate();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showEmailModal, setShowEmailModal] = useState(false);
+  const [showTermsEmailModal, setShowTermsEmailModal] = useState(false);
 
   // Create a state to store the data
   const [formData, setFormData] = useState({
@@ -48,37 +49,72 @@ const MainReview = () => {
   const [reviewSignData, setReviewSignData] = useState(() => {
     const clientData = context?.clientDetails || {};
     const contextReviewSignData = context?.reviewSignData || {};
-    
+
     return {
       // Consultation points
       makingWill: contextReviewSignData.makingWill || false,
       safeStorage: contextReviewSignData.safeStorage || false,
       keepingWillUpToDate: contextReviewSignData.keepingWillUpToDate || false,
       lpasRegFee: contextReviewSignData.lpasRegFee || false,
-      clientResponsibleSigning: contextReviewSignData.clientResponsibleSigning || false,
+      clientResponsibleSigning:
+        contextReviewSignData.clientResponsibleSigning || false,
       opgRegFee: contextReviewSignData.opgRegFee || false,
       propertyTrusts: contextReviewSignData.propertyTrusts || false,
       otherWillTrusts: contextReviewSignData.otherWillTrusts || false,
-      familyProtectionTrusts: contextReviewSignData.familyProtectionTrusts || false,
+      familyProtectionTrusts:
+        contextReviewSignData.familyProtectionTrusts || false,
       cancellationTerms: contextReviewSignData.cancellationTerms || false,
       other: contextReviewSignData.other || false,
       otherDetails: contextReviewSignData.otherDetails || "",
 
       // Products taken - Sync with Services Required from context or client data
-      productsWills: contextReviewSignData.productsWills || clientData.servicesRequired?.selectedServices?.includes('wills') || false,
-      productsLPAs: contextReviewSignData.productsLPAs || clientData.servicesRequired?.selectedServices?.includes('lpas') || false,
-      productsDiscretionaryTrust: contextReviewSignData.productsDiscretionaryTrust || clientData.servicesRequired?.selectedServices?.includes('discTrust') || false,
-      productsPropertyProtectionTrust: contextReviewSignData.productsPropertyProtectionTrust || clientData.servicesRequired?.selectedServices?.includes('ppt') || false,
-      productsBPRT: contextReviewSignData.productsBPRT || clientData.servicesRequired?.selectedServices?.includes('bprt') || false,
-      productsFamilyProtectionTrust: contextReviewSignData.productsFamilyProtectionTrust || clientData.servicesRequired?.selectedServices?.includes('fpt') || false,
-      productsVulnerableDisabilityTrust: contextReviewSignData.productsVulnerableDisabilityTrust || clientData.servicesRequired?.selectedServices?.includes('vpt') || false,
-      productsRightsOfOccupation: contextReviewSignData.productsRightsOfOccupation || clientData.servicesRequired?.selectedServices?.includes('flit') || false,
-      productsOther: contextReviewSignData.productsOther || clientData.servicesRequired?.otherServices?.length > 0 || false,
-      productsOtherDetails: contextReviewSignData.productsOtherDetails || clientData.servicesRequired?.otherServices?.join(', ') || "",
-      
+      productsWills:
+        contextReviewSignData.productsWills ||
+        clientData.servicesRequired?.selectedServices?.includes("wills") ||
+        false,
+      productsLPAs:
+        contextReviewSignData.productsLPAs ||
+        clientData.servicesRequired?.selectedServices?.includes("lpas") ||
+        false,
+      productsDiscretionaryTrust:
+        contextReviewSignData.productsDiscretionaryTrust ||
+        clientData.servicesRequired?.selectedServices?.includes("discTrust") ||
+        false,
+      productsPropertyProtectionTrust:
+        contextReviewSignData.productsPropertyProtectionTrust ||
+        clientData.servicesRequired?.selectedServices?.includes("ppt") ||
+        false,
+      productsBPRT:
+        contextReviewSignData.productsBPRT ||
+        clientData.servicesRequired?.selectedServices?.includes("bprt") ||
+        false,
+      productsFamilyProtectionTrust:
+        contextReviewSignData.productsFamilyProtectionTrust ||
+        clientData.servicesRequired?.selectedServices?.includes("fpt") ||
+        false,
+      productsVulnerableDisabilityTrust:
+        contextReviewSignData.productsVulnerableDisabilityTrust ||
+        clientData.servicesRequired?.selectedServices?.includes("vpt") ||
+        false,
+      productsRightsOfOccupation:
+        contextReviewSignData.productsRightsOfOccupation ||
+        clientData.servicesRequired?.selectedServices?.includes("flit") ||
+        false,
+      productsOther:
+        contextReviewSignData.productsOther ||
+        clientData.servicesRequired?.otherServices?.length > 0 ||
+        false,
+      productsOtherDetails:
+        contextReviewSignData.productsOtherDetails ||
+        clientData.servicesRequired?.otherServices?.join(", ") ||
+        "",
+
       // For other services management
       otherServiceInput: "",
-      otherServicesList: contextReviewSignData.otherServicesList || clientData.servicesRequired?.otherServices || [],
+      otherServicesList:
+        contextReviewSignData.otherServicesList ||
+        clientData.servicesRequired?.otherServices ||
+        [],
 
       // Pricing
       paymentTerms: contextReviewSignData.paymentTerms || "",
@@ -87,7 +123,8 @@ const MainReview = () => {
       amountOwing: contextReviewSignData.amountOwing || "",
 
       // Family Protection Trust question
-      takingFamilyProtectionTrust: contextReviewSignData.takingFamilyProtectionTrust || false,
+      takingFamilyProtectionTrust:
+        contextReviewSignData.takingFamilyProtectionTrust || false,
     };
   });
 
@@ -134,25 +171,7 @@ const MainReview = () => {
       Object.keys(familyProtection).length === 0);
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
-    setIsSubmitting(true);
-    try {
-      // Here you would typically send the data to your backend
-      console.log("Submitting form data:", formData);
-      console.log("Review sign data:", reviewSignData);
-
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-
-      toast.success("Your application has been submitted successfully!");
-      // You can navigate to a success page or reset the form here
-      // navigate('/success');
-    } catch (error) {
-      console.error("Submission failed:", error);
-      toast.error("Failed to submit the application. Please try again.");
-    } finally {
-      setIsSubmitting(false);
-    }
+    
   };
 
   // Handle checkbox changes for products taken
@@ -166,32 +185,40 @@ const MainReview = () => {
 
     // Save to context
     if (context && context.updateState) {
-      context.updateState('reviewSignData', updatedReviewSignData);
+      context.updateState("reviewSignData", updatedReviewSignData);
     }
 
     // Update client details services required when products change
     const allServices = [
-      ...(updatedReviewSignData.productsWills ? ['wills'] : []),
-      ...(updatedReviewSignData.productsLPAs ? ['lpas'] : []),
-      ...(updatedReviewSignData.productsDiscretionaryTrust ? ['discTrust'] : []),
-      ...(updatedReviewSignData.productsPropertyProtectionTrust ? ['ppt'] : []),
-      ...(updatedReviewSignData.productsBPRT ? ['bprt'] : []),
-      ...(updatedReviewSignData.productsFamilyProtectionTrust ? ['fpt'] : []),
-      ...(updatedReviewSignData.productsVulnerableDisabilityTrust ? ['vpt'] : []),
-      ...(updatedReviewSignData.productsRightsOfOccupation ? ['flit'] : []),
+      ...(updatedReviewSignData.productsWills ? ["wills"] : []),
+      ...(updatedReviewSignData.productsLPAs ? ["lpas"] : []),
+      ...(updatedReviewSignData.productsDiscretionaryTrust
+        ? ["discTrust"]
+        : []),
+      ...(updatedReviewSignData.productsPropertyProtectionTrust ? ["ppt"] : []),
+      ...(updatedReviewSignData.productsBPRT ? ["bprt"] : []),
+      ...(updatedReviewSignData.productsFamilyProtectionTrust ? ["fpt"] : []),
+      ...(updatedReviewSignData.productsVulnerableDisabilityTrust
+        ? ["vpt"]
+        : []),
+      ...(updatedReviewSignData.productsRightsOfOccupation ? ["flit"] : []),
     ];
 
-    const otherServices = updatedReviewSignData.productsOtherDetails ? 
-      updatedReviewSignData.productsOtherDetails.split(',').map(s => s.trim()).filter(s => s) : [];
+    const otherServices = updatedReviewSignData.productsOtherDetails
+      ? updatedReviewSignData.productsOtherDetails
+          .split(",")
+          .map((s) => s.trim())
+          .filter((s) => s)
+      : [];
 
     // Update client details
     if (context && context.updateState) {
-      context.updateState('clientDetails', {
+      context.updateState("clientDetails", {
         ...context.clientDetails,
         servicesRequired: {
           selectedServices: allServices,
-          otherServices: otherServices
-        }
+          otherServices: otherServices,
+        },
       });
     }
   };
@@ -206,37 +233,48 @@ const MainReview = () => {
 
     // Save to context
     if (context && context.updateState) {
-      context.updateState('reviewSignData', updatedReviewSignData);
+      context.updateState("reviewSignData", updatedReviewSignData);
     }
 
-    if (field === 'productsOtherDetails' && context && context.updateState) {
-      const otherServices = value ? value.split(',').map(s => s.trim()).filter(s => s) : [];
+    if (field === "productsOtherDetails" && context && context.updateState) {
+      const otherServices = value
+        ? value
+            .split(",")
+            .map((s) => s.trim())
+            .filter((s) => s)
+        : [];
       const currentServices = [
-        ...(updatedReviewSignData.productsWills ? ['wills'] : []),
-        ...(updatedReviewSignData.productsLPAs ? ['lpas'] : []),
-        ...(updatedReviewSignData.productsDiscretionaryTrust ? ['discTrust'] : []),
-        ...(updatedReviewSignData.productsPropertyProtectionTrust ? ['ppt'] : []),
-        ...(updatedReviewSignData.productsBPRT ? ['bprt'] : []),
-        ...(updatedReviewSignData.productsFamilyProtectionTrust ? ['fpt'] : []),
-        ...(updatedReviewSignData.productsVulnerableDisabilityTrust ? ['vpt'] : []),
-        ...(updatedReviewSignData.productsRightsOfOccupation ? ['flit'] : []),
+        ...(updatedReviewSignData.productsWills ? ["wills"] : []),
+        ...(updatedReviewSignData.productsLPAs ? ["lpas"] : []),
+        ...(updatedReviewSignData.productsDiscretionaryTrust
+          ? ["discTrust"]
+          : []),
+        ...(updatedReviewSignData.productsPropertyProtectionTrust
+          ? ["ppt"]
+          : []),
+        ...(updatedReviewSignData.productsBPRT ? ["bprt"] : []),
+        ...(updatedReviewSignData.productsFamilyProtectionTrust ? ["fpt"] : []),
+        ...(updatedReviewSignData.productsVulnerableDisabilityTrust
+          ? ["vpt"]
+          : []),
+        ...(updatedReviewSignData.productsRightsOfOccupation ? ["flit"] : []),
       ];
 
-      context.updateState('clientDetails', {
+      context.updateState("clientDetails", {
         ...context.clientDetails,
         servicesRequired: {
           selectedServices: currentServices,
-          otherServices: otherServices
-        }
+          otherServices: otherServices,
+        },
       });
     }
   };
 
   // Handle other service input change
   const handleOtherServiceInputChange = (value) => {
-    setReviewSignData(prev => ({
+    setReviewSignData((prev) => ({
       ...prev,
-      otherServiceInput: value
+      otherServiceInput: value,
     }));
   };
 
@@ -244,81 +282,96 @@ const MainReview = () => {
   const handleAddOtherService = () => {
     const service = reviewSignData.otherServiceInput.trim();
     if (service && !reviewSignData.otherServicesList.includes(service)) {
-      const updatedServicesList = [...reviewSignData.otherServicesList, service];
+      const updatedServicesList = [
+        ...reviewSignData.otherServicesList,
+        service,
+      ];
       const updatedReviewSignData = {
         ...reviewSignData,
         otherServicesList: updatedServicesList,
         otherServiceInput: "",
-        productsOtherDetails: updatedServicesList.join(', ')
+        productsOtherDetails: updatedServicesList.join(", "),
       };
       setReviewSignData(updatedReviewSignData);
 
       // Save to context
       if (context && context.updateState) {
-        context.updateState('reviewSignData', updatedReviewSignData);
+        context.updateState("reviewSignData", updatedReviewSignData);
       }
 
       // Update client details
       const currentServices = [
-        ...(updatedReviewSignData.productsWills ? ['wills'] : []),
-        ...(updatedReviewSignData.productsLPAs ? ['lpas'] : []),
-        ...(updatedReviewSignData.productsDiscretionaryTrust ? ['discTrust'] : []),
-        ...(updatedReviewSignData.productsPropertyProtectionTrust ? ['ppt'] : []),
-        ...(updatedReviewSignData.productsBPRT ? ['bprt'] : []),
-        ...(updatedReviewSignData.productsFamilyProtectionTrust ? ['fpt'] : []),
-        ...(updatedReviewSignData.productsVulnerableDisabilityTrust ? ['vpt'] : []),
-        ...(updatedReviewSignData.productsRightsOfOccupation ? ['flit'] : []),
+        ...(updatedReviewSignData.productsWills ? ["wills"] : []),
+        ...(updatedReviewSignData.productsLPAs ? ["lpas"] : []),
+        ...(updatedReviewSignData.productsDiscretionaryTrust
+          ? ["discTrust"]
+          : []),
+        ...(updatedReviewSignData.productsPropertyProtectionTrust
+          ? ["ppt"]
+          : []),
+        ...(updatedReviewSignData.productsBPRT ? ["bprt"] : []),
+        ...(updatedReviewSignData.productsFamilyProtectionTrust ? ["fpt"] : []),
+        ...(updatedReviewSignData.productsVulnerableDisabilityTrust
+          ? ["vpt"]
+          : []),
+        ...(updatedReviewSignData.productsRightsOfOccupation ? ["flit"] : []),
       ];
 
-      context.updateState('clientDetails', {
+      context.updateState("clientDetails", {
         ...context.clientDetails,
         servicesRequired: {
           selectedServices: currentServices,
-          otherServices: updatedServicesList
-        }
+          otherServices: updatedServicesList,
+        },
       });
     }
   };
 
   // Remove other service
   const handleRemoveOtherService = (serviceToRemove) => {
-    const updatedServicesList = reviewSignData.otherServicesList.filter(service => service !== serviceToRemove);
+    const updatedServicesList = reviewSignData.otherServicesList.filter(
+      (service) => service !== serviceToRemove,
+    );
     const updatedReviewSignData = {
       ...reviewSignData,
       otherServicesList: updatedServicesList,
-      productsOtherDetails: updatedServicesList.join(', ')
+      productsOtherDetails: updatedServicesList.join(", "),
     };
     setReviewSignData(updatedReviewSignData);
 
     // Save to context
     if (context && context.updateState) {
-      context.updateState('reviewSignData', updatedReviewSignData);
+      context.updateState("reviewSignData", updatedReviewSignData);
     }
 
     // Update client details
     const currentServices = [
-      ...(updatedReviewSignData.productsWills ? ['wills'] : []),
-      ...(updatedReviewSignData.productsLPAs ? ['lpas'] : []),
-      ...(updatedReviewSignData.productsDiscretionaryTrust ? ['discTrust'] : []),
-      ...(updatedReviewSignData.productsPropertyProtectionTrust ? ['ppt'] : []),
-      ...(updatedReviewSignData.productsBPRT ? ['bprt'] : []),
-      ...(updatedReviewSignData.productsFamilyProtectionTrust ? ['fpt'] : []),
-      ...(updatedReviewSignData.productsVulnerableDisabilityTrust ? ['vpt'] : []),
-      ...(updatedReviewSignData.productsRightsOfOccupation ? ['flit'] : []),
+      ...(updatedReviewSignData.productsWills ? ["wills"] : []),
+      ...(updatedReviewSignData.productsLPAs ? ["lpas"] : []),
+      ...(updatedReviewSignData.productsDiscretionaryTrust
+        ? ["discTrust"]
+        : []),
+      ...(updatedReviewSignData.productsPropertyProtectionTrust ? ["ppt"] : []),
+      ...(updatedReviewSignData.productsBPRT ? ["bprt"] : []),
+      ...(updatedReviewSignData.productsFamilyProtectionTrust ? ["fpt"] : []),
+      ...(updatedReviewSignData.productsVulnerableDisabilityTrust
+        ? ["vpt"]
+        : []),
+      ...(updatedReviewSignData.productsRightsOfOccupation ? ["flit"] : []),
     ];
 
-    context.updateState('clientDetails', {
+    context.updateState("clientDetails", {
       ...context.clientDetails,
       servicesRequired: {
         selectedServices: currentServices,
-        otherServices: updatedServicesList
-      }
+        otherServices: updatedServicesList,
+      },
     });
   };
 
   // Handle key press for other service input
   const handleOtherServiceKeyPress = (e) => {
-    if (e.key === 'Enter') {
+    if (e.key === "Enter") {
       e.preventDefault();
       handleAddOtherService();
     }
@@ -334,7 +387,7 @@ const MainReview = () => {
 
     // Save to context for persistence
     if (context && context.updateState) {
-      context.updateState('reviewSignData', updatedReviewSignData);
+      context.updateState("reviewSignData", updatedReviewSignData);
     }
   };
 
@@ -348,7 +401,7 @@ const MainReview = () => {
 
     // Save to context for persistence
     if (context && context.updateState) {
-      context.updateState('reviewSignData', updatedReviewSignData);
+      context.updateState("reviewSignData", updatedReviewSignData);
     }
   };
 
@@ -377,7 +430,7 @@ const MainReview = () => {
               <div className="flex flex-col md:flex-row">
                 <span className="font-medium w-32">Client Reference:</span>
                 <span className="font-mono">
-                  {clientDetails.clientReference   || "N/A"}
+                  {clientDetails.clientReference || "N/A"}
                 </span>
               </div>
               <div className="flex flex-col md:flex-row">
@@ -464,8 +517,7 @@ const MainReview = () => {
                   },
                   {
                     field: "opgRegFee",
-                    label:
-                      "Client agrees informed of £82 OPG reg fee",
+                    label: "Client agrees informed of £82 OPG reg fee",
                     required: true,
                   },
                   {
@@ -539,7 +591,7 @@ const MainReview = () => {
                   <span className="text-xs md:text-sm font-medium">✏️ Editable - Changes sync to Client Details</span>
                 </div>
               </div> */}
-              
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                 {[
                   { field: "productsWills", label: "Wills" },
@@ -573,14 +625,19 @@ const MainReview = () => {
                   },
                   { field: "productsOther", label: "Other" },
                 ].map(({ field, label }) => (
-                  <label key={field} className="flex items-center space-x-2 cursor-pointer hover:bg-white hover:bg-opacity-50 p-2 rounded transition-colors">
+                  <label
+                    key={field}
+                    className="flex items-center space-x-2 cursor-pointer hover:bg-white hover:bg-opacity-50 p-2 rounded transition-colors"
+                  >
                     <input
                       type="checkbox"
                       className="w-3 h-3 md:w-4 md:h-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500"
                       checked={reviewSignData[field]}
                       onChange={() => handleProductCheckboxChange(field)}
                     />
-                    <span className="text-xs md:text-sm font-medium">{label}</span>
+                    <span className="text-xs md:text-sm font-medium">
+                      {label}
+                    </span>
                   </label>
                 ))}
               </div>
@@ -595,12 +652,14 @@ const MainReview = () => {
                       <input
                         type="text"
                         value={reviewSignData.otherServiceInput || ""}
-                        onChange={(e) => handleOtherServiceInputChange(e.target.value)}
+                        onChange={(e) =>
+                          handleOtherServiceInputChange(e.target.value)
+                        }
                         onKeyPress={handleOtherServiceKeyPress}
                         placeholder="Enter other services"
                         className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                       />
-                      <button 
+                      <button
                         type="button"
                         onClick={handleAddOtherService}
                         className="absolute right-2 top-1/2 -translate-y-1/2 bg-[#0080FF] hover:bg-blue-700 text-white rounded-lg w-6 h-6 md:w-8 md:h-8 flex items-center justify-center"
@@ -609,26 +668,31 @@ const MainReview = () => {
                       </button>
                     </div>
                   </div>
-                  
-                  {reviewSignData.otherServicesList && reviewSignData.otherServicesList.length > 0 && (
-                    <div className="mt-2 flex flex-wrap gap-2">
-                      {reviewSignData.otherServicesList.map((service, index) => (
-                        <div 
-                          key={index}
-                          className="bg-gray-100 text-gray-800 text-xs md:text-sm px-3 py-1 rounded-full flex items-center gap-2"
-                        >
-                          {service}
-                          <button 
-                            type="button"
-                            onClick={() => handleRemoveOtherService(service)}
-                            className="text-gray-500 hover:text-red-500"
-                          >
-                            ×
-                          </button>
-                        </div>
-                      ))}
-                    </div>
-                  )}
+
+                  {reviewSignData.otherServicesList &&
+                    reviewSignData.otherServicesList.length > 0 && (
+                      <div className="mt-2 flex flex-wrap gap-2">
+                        {reviewSignData.otherServicesList.map(
+                          (service, index) => (
+                            <div
+                              key={index}
+                              className="bg-gray-100 text-gray-800 text-xs md:text-sm px-3 py-1 rounded-full flex items-center gap-2"
+                            >
+                              {service}
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  handleRemoveOtherService(service)
+                                }
+                                className="text-gray-500 hover:text-red-500"
+                              >
+                                ×
+                              </button>
+                            </div>
+                          ),
+                        )}
+                      </div>
+                    )}
                 </div>
               )}
             </div>
@@ -831,7 +895,9 @@ const MainReview = () => {
 
             <div className="bg-gray-50 rounded-lg p-4">
               <div className="flex items-center justify-between mb-3">
-                <h5 className="font-medium text-[14px] md:text-[16px] text-gray-800">Client Signatures</h5>
+                <h5 className="font-medium text-[14px] md:text-[16px] text-gray-800">
+                  Client Signatures
+                </h5>
                 <span className="text-sm text-gray-500">
                   {signatures.client1 || signatures.client2
                     ? "Captured"
@@ -911,15 +977,14 @@ const MainReview = () => {
                 onClick={() => setShowEmailModal(true)}
                 className="flex items-center justify-center gap-2 px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 transition-colors"
               >
-                Email Receipt
+                Email Application
               </button>
-              {/* <button
-                onClick={handleSubmit}
-                className="flex items-center justify-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors"
-                disabled={isSubmitting}
+              <button
+                onClick={() => setShowTermsEmailModal(true)}
+                className="flex items-center justify-center gap-2 px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 transition-colors"
               >
-                {isSubmitting ? "Submitting..." : "Complete Application"}
-              </button> */}
+                Email receipt
+              </button>
             </div>
 
             {!signatures.client1 && !signatures.client2 && (
@@ -945,11 +1010,19 @@ const MainReview = () => {
           </div>
         </div>
       )}
-      
-      {/* Email Receipt Modal */}
-      <EmailReceiptModal 
-        isOpen={showEmailModal} 
-        onClose={() => setShowEmailModal(false)} 
+
+      {/* Email Application Modal */}
+      <EmailReceiptModal
+        isOpen={showEmailModal}
+        onClose={() => setShowEmailModal(false)}
+        pdfType="full"
+      />
+
+      {/* Email Terms & Conditions Modal */}
+      <EmailReceiptModal
+        isOpen={showTermsEmailModal}
+        onClose={() => setShowTermsEmailModal(false)}
+        pdfType="terms"
       />
     </div>
   );

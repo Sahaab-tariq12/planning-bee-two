@@ -334,19 +334,19 @@ const FinancialInformation = () => {
           <div className="grid grid-cols-1 md:grid-cols-3 text-center gap-6">
             <div>
               <p className="text-sm text-gray-600 mb-1">Joint Net Estate</p>
-              <p className="text-2xl font-bold text-[#1a202c]">
+              <p className="text-lg md:text-2xl font-bold text-[#1a202c] break-words">
                 {formatMoney(netEstate.joint)}
               </p>
             </div>
             <div>
               <p className="text-sm text-gray-600 mb-1">Client 1 Net Estate</p>
-              <p className="text-2xl font-bold text-[#1a202c]">
+              <p className="text-lg md:text-2xl font-bold text-[#1a202c] break-words">
                 {formatMoney(netEstate.c1)}
               </p>
             </div>
             <div>
               <p className="text-sm text-gray-600 mb-1">Client 2 Net Estate</p>
-              <p className="text-2xl font-bold text-[#1a202c]">
+              <p className="text-lg md:text-2xl font-bold text-[#1a202c] break-words">
                 {formatMoney(netEstate.c2)}
               </p>
             </div>
@@ -355,10 +355,10 @@ const FinancialInformation = () => {
           <hr className="border-blue-100 my-2" />
 
           <div className="text-center flex flex-col gap-2">
-            <p className="text-base font-semibold text-[#1a202c]">
+            <p className="text-sm md:text-base font-semibold text-[#1a202c]">
               Total Estate Value
             </p>
-            <p className="text-3xl font-extrabold text-[#0080FF]">
+            <p className="text-xl md:text-3xl font-extrabold text-[#0080FF] break-words">
               {formatMoney(totalEstateValue)}
             </p>
             <p className="text-sm text-gray-600">
